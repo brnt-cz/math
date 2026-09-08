@@ -135,8 +135,14 @@ var CACHE = "matika-%s";
 var ASSETS = %s;
 
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); })
-    .then(function () { return self.skipWaiting(); }));
+  // cache: "reload" obchází HTTP cache prohlížeče, aby se nepředcachovala stará verze
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return Promise.all(ASSETS.map(function (u) {
+      return fetch(new Request(u, { cache: "reload" })).then(function (r) {
+        return r && r.ok ? c.put(u, r) : null;
+      });
+    }));
+  }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener("activate", function (e) {

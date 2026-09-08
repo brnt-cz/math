@@ -14,6 +14,9 @@ a bez závislostí (jediné externí zdroje jsou Google Fonts).
   a odčítají; přednost je tím zaručená konstrukcí, ne dodatečným parsováním.
 - Mezivýsledky vždy celé číslo v rozsahu 1..max — žádné minus, žádné přetečení,
   dělení beze zbytku
+- V rozsahu **do 20** se generují převážně příklady, které přejdou přes desítku
+  (~85–100 % podle nastavení); pod deseti zůstane jen každý pátý, ať to není samá
+  jednoduchá matematika
 - Po chybě příklad **zůstává**, dokud ho dítě nedopočítá; po třech omylech napoví
 - Série 10 příkladů, hvězdičky, nejdelší řada napoprvé
 
@@ -52,7 +55,8 @@ Appka jde přidat na plochu telefonu/tabletu a funguje **bez sítě**:
 - `manifest.json` — standalone režim, ikony 192/512 + maskable, obě orientace
 - `sw.js` — service worker, který si při první návštěvě uloží celou appku
   (stránku, ikony, fonty). Jméno cache obsahuje hash `index.html`, takže
-  se po nasazení nové verze sama obnoví a stará cache se smaže.
+  se po nasazení nové verze sama obnoví a stará cache se smaže. Precache jde
+  přes `cache: "reload"`, aby se neuložila verze z HTTP cache prohlížeče.
 - Fonty jsou **hostované u nás** (`fonts/*.woff2`, variabilní, podmnožiny
   latin + latin-ext kvůli diakritice) — offline tedy nechybí a nejde
   ani žádný požadavek na cizí server.
