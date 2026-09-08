@@ -124,12 +124,8 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: flex-end;
     gap: .3125rem;
   }
-
-  .chest-col .chest-n { order: 1; }      /* v pásu je počet pod truhlou */
-  .chest-col .chest-stack { flex: 0 0 auto; }
 
   /* Truhly stojí na stejné zemi jako zeď a stohují se nahoru — další se objeví,
      až když je ta pod ní úplně plná. */
@@ -292,7 +288,13 @@
     .sheet::before { left: 2.5rem; }
   }
 
-  @media (min-width: 30rem) {
+  /* Tablet na výšku: pás pod hrou zůstává, jen kostky můžou být větší. */
+  @media (min-width: 30rem) and (orientation: portrait) {
+    .page { --bw-base: 2.5rem; }
+  }
+
+  /* Na šířku (a s dost místa) se zeď i truhly přesunou do pruhu vpravo. */
+  @media (min-width: 30rem) and (orientation: landscape) {
     .page {
       --bw-base: 3.25rem;
       grid-template-columns: minmax(0, 1fr) auto;
@@ -312,9 +314,6 @@
     }
 
     .rail { align-items: center; gap: .5rem; }
-    .chest-col { justify-content: flex-start; }
-    .chest-col .chest-n { order: 0; }
-    .chest-col .chest-stack { flex: 1 1 auto; }
 
     .rail .lab,
     .chest-col .lab { display: block; margin: 0; text-align: center; }
@@ -332,7 +331,6 @@
     .page { max-width: 46rem; gap: 2.5rem; padding: 2rem 1.5rem 3rem; }
     .wrap { gap: 1.25rem; }
     h1 { font-size: 1.875rem; }
-    .page { --bw-base: 4rem; }
     .sheet { padding: 2.75rem 1.5rem 2.5rem 4rem; }
     .sheet::before { left: 3rem; }
     .page.has-chest { max-width: 56rem; gap: 1.5rem; }
@@ -342,6 +340,10 @@
     .pad button { font-size: 1.75rem; padding: .75rem 0; }
     .pad .go, .pad .del { font-size: 1.125rem; }
     .setup { padding: 1rem 1.125rem; }
+  }
+
+  @media (min-width: 48rem) and (orientation: landscape) {
+    .page { --bw-base: 4rem; }
   }
 
   /* ---------- hlavička ---------- */
@@ -1211,7 +1213,8 @@
     return grid;
   }
 
-  var SIDE_LAYOUT = window.matchMedia("(min-width: 30rem)");
+  // stejná podmínka jako v CSS: pruh vpravo jen na šířku
+  var SIDE_LAYOUT = window.matchMedia("(min-width: 30rem) and (orientation: landscape)");
   var painted = null;    // poslední nakreslená mřížka, aby přepočet neběhal ve smyčce
 
   function paintTower(dropLast) {

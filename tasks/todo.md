@@ -29,8 +29,10 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
       zemi jako zeď); po 100 je z ní velká truhla. Co je v truhle, chyba už nesundá.
 - [x] Kostky se sypou do truhel po řadě; další truhla se přistaví (zarovnaná zleva, sedí na víku
       té spodní) teprve když je předchozí úplně plná — 54 políček, tj. 3250 kostek
-- [x] Mobil (<30rem): hra má celou šířku, zeď a truhly jsou v pásu pod klávesnicí a kostky
-      jsou menší — příklady mají prioritu, gamifikace je vedlejší
+- [x] Rozvržení podle orientace: na výšku má hra celou šířku a zeď s truhlami jsou v pásu
+      pod klávesnicí (telefon 30 px kostky, tablet 40 px), na šířku svislý pruh vpravo.
+      Příklady mají prioritu, gamifikace je vedlejší.
+- [x] PWA není zamčená na výšku — v manifestu není `orientation`, jde tedy oboje
 - [x] Inventář na kliknutí (hover se ukázal jako nepříjemný): minecraftová mřížka 3 × 9 nebo 6 × 9,
       kostky stackované po druzích, max 64 na políčko. Vyskočí nad truhlu.
 - [x] Dvojtruhla je jeden kus — jedno kování, uprostřed žádná hrana
