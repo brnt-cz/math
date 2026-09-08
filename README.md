@@ -32,14 +32,24 @@ a bez závislostí (jediné externí zdroje jsou Google Fonts).
   po druzích, max 64 na políčko
 - Vše (nastavení, nejdelší série, zeď, truhly) drží v `localStorage`
 
-Na displejích pod 480 px má hra celou šířku a zeď s truhlami se přesunou do pásu pod
-klávesnici s menšími kostkami — příklady mají prioritu, gamifikace je vedlejší.
+Rozvržení se řídí orientací, ne jen šířkou: **na výšku** má hra celou šířku a zeď
+s truhlami jsou v pásu pod klávesnicí (na tabletu s většími kostkami), **na šířku**
+se přesunou do svislého pruhu vpravo. Příklady mají prioritu, gamifikace je vedlejší.
+
+**Na šířku se celá appka vejde do okna bez posuvníku** — stránka má výšku `100svh`
+a o zbylou výšku se dělí sešit s klávesnicí (`flex` + `grid-auto-rows: 1fr`), takže
+klávesnice je na Full HD velká a na nízkém okně menší, ale vždy celá vidět. Velikost
+písma na tlačítkách se počítá z výšky sloupce (`cqh`). Na velmi nízkém okně (telefon
+na šířku) se nastavení srovná do jednoho řádku bez popisků.
+
+Na výšku se bez posuvníku vejdou tablety; na telefonu je vidět celá hra a scrolluje
+se jen k pásu s kostkami.
 
 ## PWA a offline
 
 Appka jde přidat na plochu telefonu/tabletu a funguje **bez sítě**:
 
-- `manifest.json` — standalone režim, ikony 192/512 + maskable
+- `manifest.json` — standalone režim, ikony 192/512 + maskable, obě orientace
 - `sw.js` — service worker, který si při první návštěvě uloží celou appku
   (stránku, ikony, fonty). Jméno cache obsahuje hash `index.html`, takže
   se po nasazení nové verze sama obnoví a stará cache se smaže.

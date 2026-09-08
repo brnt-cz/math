@@ -29,8 +29,13 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
       zemi jako zeď); po 100 je z ní velká truhla. Co je v truhle, chyba už nesundá.
 - [x] Kostky se sypou do truhel po řadě; další truhla se přistaví (zarovnaná zleva, sedí na víku
       té spodní) teprve když je předchozí úplně plná — 54 políček, tj. 3250 kostek
-- [x] Mobil (<30rem): hra má celou šířku, zeď a truhly jsou v pásu pod klávesnicí a kostky
-      jsou menší — příklady mají prioritu, gamifikace je vedlejší
+- [x] Rozvržení podle orientace: na výšku má hra celou šířku a zeď s truhlami jsou v pásu
+      pod klávesnicí (telefon 30 px kostky, tablet 40 px), na šířku svislý pruh vpravo.
+      Příklady mají prioritu, gamifikace je vedlejší.
+- [x] Na šířku se celá appka vejde do okna bez posuvníku (`100svh` + pružný sešit
+      a klávesnice, velikost písma tlačítek z `cqh`); na nízkém okně kompaktní nastavení
+- [x] Zrušeno fixování výšky sloupce (`lockWrapHeight`) — výšku teď drží rozvržení samo
+- [x] PWA není zamčená na výšku — v manifestu není `orientation`, jde tedy oboje
 - [x] Inventář na kliknutí (hover se ukázal jako nepříjemný): minecraftová mřížka 3 × 9 nebo 6 × 9,
       kostky stackované po druzích, max 64 na políčko. Vyskočí nad truhlu.
 - [x] Dvojtruhla je jeden kus — jedno kování, uprostřed žádná hrana
@@ -89,6 +94,18 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
   query má teď stejnou specificitu; proměřeno 1280/768/520/430/390 px se truhlou i bez ní.
 - **Vědomé rozhodnutí:** po 3 omylech se ukáže výsledek jako nápověda a věž se přestane bourat —
   jinak by šel příklad, který syn neumí, bourat do nuly.
+
+## Ověřeno bez posuvníku
+
+Na šířku (obsah × okno, s truhlou i bez): iPad 11" 1080×810, iPad mini 1024×744,
+iPad s lištou 1080×700, notebook 1366×768, desktop 1280×900, Full HD 1920×1080,
+nízké okno 1000×500, telefon na šířku 844×390 i 667×375 — **nikde posuvník**.
+Klávesnice se přizpůsobí: tlačítko 39 px na telefonu na šířku, 62 px na iPadu,
+125 px na Full HD.
+
+Na výšku: tablety (744×1133, 810×1080) bez posuvníku; telefony mají celou hru
+do 700 px (na iPhonu 14 i Pixelu 7 je vidět bez scrollování) a pás s kostkami
+je pod ohybem.
 
 ## Ověřeno offline
 
