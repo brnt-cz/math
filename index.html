@@ -548,7 +548,10 @@
   .task .op { color: var(--accent); padding: 0 .0625rem; }
   .task .eq { color: var(--ink-soft); }
 
+  /* Není to <input> — číslice zapisujeme sami, takže na mobilu nevyskočí
+     systémová klávesnice a nic se neposune. */
   #answer {
+    display: inline-block;
     width: 2.35em;
     padding: .06em .1em .1em;
     border: 2px dashed var(--accent);
@@ -559,12 +562,10 @@
     font-size: inherit;
     text-align: center;
     font-variant-numeric: tabular-nums;
-    caret-color: var(--accent);
+    line-height: 1;
   }
 
-  #answer::placeholder { color: var(--line); }
-  #answer:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; border-style: solid; }
-  #answer:disabled { opacity: 1; }
+  #answer:empty::after { content: "?"; color: var(--line); }
 
   .sheet.is-ok #answer { border-style: solid; border-color: var(--ok); color: var(--ok); }
   .sheet.is-bad #answer { border-style: solid; border-color: var(--bad); color: var(--bad); }
@@ -880,7 +881,7 @@
     chestGrid: document.getElementById("chest-grid")
   };
 
-  var input = null;
+  var answer = null;   // rámeček s výsledkem (obyčejný prvek, ne <input>)
 
   function rnd(n) { return Math.floor(Math.random() * n); }
 
@@ -1058,19 +1059,14 @@
     eq.textContent = "=";
     frag.appendChild(eq);
 
-    input = document.createElement("input");
-    input.id = "answer";
-    input.type = "text";
-    input.inputMode = "numeric";
-    input.autocomplete = "off";
-    input.maxLength = 2;
-    input.placeholder = "?";
-    input.setAttribute("aria-label", "Výsledek");
-    frag.appendChild(input);
+    answer = document.createElement("span");
+    answer.id = "answer";
+    answer.setAttribute("role", "status");
+    answer.setAttribute("aria-label", "Výsledek");
+    frag.appendChild(answer);
 
     el.task.dataset.n = String(task.terms.length);
     el.task.appendChild(frag);
-    input.focus({ preventScroll: true });
   }
 
   function renderProgress() {
@@ -1455,11 +1451,10 @@
   }
 
   function check() {
-    if (locked || !input) return;
-    var raw = input.value.trim();
+    if (locked || !answer) return;
+    var raw = answer.textContent.trim();
     if (raw === "") {
       setNote("Napiš výsledek.");
-      input.focus({ preventScroll: true });
       return;
     }
 
@@ -1467,7 +1462,6 @@
 
     if (val === task.result) {
       locked = true;
-      input.disabled = true;
       el.sheet.className = "sheet is-ok";
       setNote((tries === 0 ? "Správně!" : "Správně, teď to je!") + " Kostka nahoru.", "ok");
       beep(true);
@@ -1513,26 +1507,31 @@
       note.appendChild(document.createTextNode(" — napiš ho."));
     }
 
-    input.value = "";
-    input.focus({ preventScroll: true });
+    answer.textContent = "";
   }
 
   function type(digit) {
-    if (locked || !input) return;
-    if (input.value.length >= 2) return;
-    input.value = (input.value + digit).replace(/^0(?=\d)/, "");
-    input.focus({ preventScroll: true });
+    if (locked || !answer) return;
+    if (answer.textContent.length >= 2) return;
+    answer.textContent = (answer.textContent + digit).replace(/^0(?=\d)/, "");
   }
 
   function del() {
-    if (locked || !input) return;
-    input.value = input.value.slice(0, -1);
-    input.focus({ preventScroll: true });
+    if (locked || !answer) return;
+    answer.textContent = answer.textContent.slice(0, -1);
+  }
+
+  /* Po kliknutí ukazatelem necháme ovládací prvek odostřit — jinak by zaostřené
+     tlačítko polykalo mezerník. Klávesnice píše přes posluchač na document,
+     takže žádný prvek zaostřený být nemusí. (e.detail === 0 = spuštěno klávesou.) */
+  function unfocus(e, node) {
+    if (e.detail > 0 && node && node.blur) node.blur();
   }
 
   el.pad.addEventListener("click", function (e) {
     var b = e.target.closest("button");
     if (!b) return;
+    unfocus(e, b);
     if (b.dataset.d) type(b.dataset.d);
     else if (b.dataset.act === "del") del();
     else if (b.dataset.act === "check") check();
@@ -1556,6 +1555,7 @@
     box.addEventListener("click", function (e) {
       var b = e.target.closest("button");
       if (!b) return;
+      unfocus(e, b);
       cfg[key] = cast(b.dataset.v);
       paintSeg(box, key);
       save();
@@ -1581,6 +1581,7 @@
     var any = boxes.some(function (b) { return b.checked; });
     if (!any) { e.target.checked = true; return; }   // aspoň jedno znaménko musí zůstat
     boxes.forEach(function (b) { cfg.ops[b.value] = b.checked; });
+    if (e.target.blur) e.target.blur();
     save();
     startRound();
   });
@@ -1591,7 +1592,7 @@
     });
   }
 
-  el.again.addEventListener("click", function () { startRound(); });
+  el.again.addEventListener("click", function (e) { unfocus(e, el.again); startRound(); });
 
   var tip = document.getElementById("mc-tip");
   var tipFor = null;
@@ -1631,6 +1632,7 @@
     if (!btn) return;
     e.stopPropagation();
 
+    unfocus(e, btn);
     var i = parseInt(btn.dataset.i, 10);
     if (openChest === i) closeChest();
     else showPanel(i);

@@ -9,7 +9,12 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
 - [x] Znaménka jako zaškrtávátka: `+`, `−`, `×`, `÷` — libovolná kombinace, aspoň jedno musí zůstat
 - [x] Priorita operací: `× ÷` se počítá před `+ −` (příklad je matematicky správný i pro cizí návštěvníky)
 - [x] Mezivýsledky vždy celé číslo v rozsahu 1–max (žádné minus, žádné přetečení, dělení beze zbytku)
-- [x] Input na výsledek + velká numerická klávesnice i fyzická klávesnice (číslice, Backspace, Enter)
+- [x] Výsledek se píše velkými tlačítky nebo fyzickou klávesnicí (číslice, Backspace, Enter).
+      Rámeček na výsledek **není `<input>`** — na mobilu/tabletu by při každém focusu
+      vyskočila systémová klávesnice a posunula obrazovku. Číslice zapisujeme sami,
+      posluchač visí na `document`, takže focus není potřeba vůbec.
+- [x] Po kliknutí ukazatelem se ovládací prvek odostří (`e.detail > 0`), aby zaostřené
+      tlačítko nepolykalo mezerník
 - [x] Minecraftová věž: správný výsledek = kostka nahoru, chyba = poslední kostka spadne
 - [x] Kostky jako izometrické SVG kubusy (drn / kámen / dubová prkna), bez podlahy, odsazené od sešitu
 - [x] Zeď: sloupec se plní odspodu, po dosažení vrcholu stránky začne nový sloupec vedle;
@@ -69,6 +74,10 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
   a pak u černého obtažení.
 - **Kotvení inventáře:** `bottom: 100%` na sloupci truhly ho vystřelilo mimo obrazovku (sloupec
   je vysoký jako zeď). Truhla je proto v obalu `.chest-mount` velikosti spritu.
+- **Regrese z mobilního rozvržení:** `.page:not(.has-chest)` má specificitu dvou tříd
+  a media query specificitu nezvyšuje, takže mobilní jednosloupcové pravidlo přebíjelo
+  desktopový přepis — bez truhly spadly kostičky pod hru i na desktopu. Přepis v media
+  query má teď stejnou specificitu; proměřeno 1280/768/520/430/390 px se truhlou i bez ní.
 - **Vědomé rozhodnutí:** po 3 omylech se ukáže výsledek jako nápověda a věž se přestane bourat —
   jinak by šel příklad, který syn neumí, bourat do nuly.
 
