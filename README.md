@@ -35,19 +35,42 @@ a bez závislostí (jediné externí zdroje jsou Google Fonts).
 Na displejích pod 480 px má hra celou šířku a zeď s truhlami se přesunou do pásu pod
 klávesnici s menšími kostkami — příklady mají prioritu, gamifikace je vedlejší.
 
+## PWA a offline
+
+Appka jde přidat na plochu telefonu/tabletu a funguje **bez sítě**:
+
+- `manifest.json` — standalone režim, ikony 192/512 + maskable
+- `sw.js` — service worker, který si při první návštěvě uloží celou appku
+  (stránku, ikony, fonty). Jméno cache obsahuje hash `index.html`, takže
+  se po nasazení nové verze sama obnoví a stará cache se smaže.
+- Fonty jsou **hostované u nás** (`fonts/*.woff2`, variabilní, podmnožiny
+  latin + latin-ext kvůli diakritice) — offline tedy nechybí a nejde
+  ani žádný požadavek na cizí server.
+
+Verze pro Claude Artifact (`src/matika.html`) si naopak nechává odkaz na Google Fonts,
+protože fragment nemůže odkazovat na lokální soubory.
+
 ## Struktura
 
     src/matika.html   zdroj — fragment bez <html>/<head>/<body>
-    build.py          dolepí <head> (vč. favicony jako inline SVG) → index.html
+    build.py          sestaví index.html: dolepí <head> (favicona jako inline SVG),
+                      nahradí odkaz na Google Fonts lokálním @font-face,
+                      přidá registraci service workeru a vygeneruje sw.js
     index.html        vygenerovaný výsledek, tohle se nasazuje
+    sw.js             vygenerovaný service worker (needitovat ručně)
+    manifest.json     PWA manifest
+    fonts/            woff2 + fonts.json (rozsahy znaků pro @font-face)
+    icon-*.png        ikony appky (generuje `build.py --icons`, potřebuje rsvg-convert)
     tasks/todo.md     průběh práce a ověření
 
 ## Sestavení a nasazení
 
 ```bash
-python3 build.py                          # src/matika.html → index.html
-scp index.html pi:/www/matika/index.html  # nasazení na brnt.cz/matika
+python3 build.py            # src/matika.html → index.html + sw.js
+python3 build.py --icons    # jen když se mění ikona
+
+rsync -az index.html manifest.json sw.js icon-*.png pi:/www/matika/
+rsync -az fonts/*.woff2 pi:/www/matika/fonts/
 ```
 
-`index.html` je v repu commitnutý schválně — nasazení je jen zkopírování jednoho souboru.
-Fragment `src/matika.html` je zároveň to, co se publikuje jako Claude Artifact.
+`index.html` i `sw.js` jsou v repu commitnuté schválně — nasazení je jen kopie souborů.

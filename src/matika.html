@@ -543,7 +543,7 @@
      systémová klávesnice a nic se neposune. */
   #answer {
     display: inline-block;
-    width: 2.35em;
+    width: 2.4em;
     padding: .06em .1em .1em;
     border: 2px dashed var(--accent);
     border-radius: .2em;
@@ -556,7 +556,33 @@
     line-height: 1;
   }
 
+  /* Rámeček není <input>, tak si kurzor nakreslíme: dokud je prázdno, bliká
+     před otazníkem, po zapsání čísla za ním. */
   #answer:empty::after { content: "?"; color: var(--line); }
+
+  #answer:empty::before,
+  #answer:not(:empty)::after {
+    content: "";
+    display: inline-block;
+    width: .09em;
+    height: .7em;
+    vertical-align: -.085em;
+    background: var(--accent);
+    animation: caret 1.1s step-end infinite;
+  }
+
+  #answer:empty::before { margin-right: .08em; }
+  #answer:not(:empty)::after { margin-left: .08em; }
+
+  #answer.locked::before,
+  #answer.locked::after { display: none; }
+
+  @keyframes caret { 50% { opacity: 0; } }
+
+  @media (prefers-reduced-motion: reduce) {
+    #answer::before,
+    #answer::after { animation: none; }
+  }
 
   .sheet.is-ok #answer { border-style: solid; border-color: var(--ok); color: var(--ok); }
   .sheet.is-bad #answer { border-style: solid; border-color: var(--bad); color: var(--bad); }
@@ -1451,6 +1477,7 @@
 
     if (val === task.result) {
       locked = true;
+      answer.classList.add("locked");
       el.sheet.className = "sheet is-ok";
       setNote((tries === 0 ? "Správně!" : "Správně, teď to je!") + " Kostka nahoru.", "ok");
       beep(true);

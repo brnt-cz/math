@@ -46,6 +46,15 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
 - [x] Pevný červený okraj sešitu, text do něj nezasahuje
 - [x] Responzivní 320 px → desktop, jen světlé téma, zvukové blipnutí
 
+## PWA
+
+- [x] `manifest.json` (standalone, ikony 192/512 + maskable, portrait)
+- [x] `sw.js` — precache celé appky, jméno cache = hash `index.html` (samo se obnoví)
+- [x] Fonty hostované lokálně (`fonts/*.woff2`, latin + latin-ext) — offline nic nechybí
+      a nejde žádný požadavek na cizí server
+- [x] Blikající kurzor v rámečku: prázdný = před otazníkem, s číslem = za ním,
+      výška i střed podle číslic (naměřeno: číslice sahají −0,022em..0,63em)
+
 ## Review
 
 - **Generátor ověřen programově:** 36 000 příkladů přes všechny kombinace rozsahu (10/20),
@@ -80,6 +89,13 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
   query má teď stejnou specificitu; proměřeno 1280/768/520/430/390 px se truhlou i bez ní.
 - **Vědomé rozhodnutí:** po 3 omylech se ukáže výsledek jako nápověda a věž se přestane bourat —
   jinak by šel příklad, který syn neumí, bourat do nuly.
+
+## Ověřeno offline
+
+- Po první návštěvě má service worker v cache 10 položek (stránka, manifest, 3 ikony,
+  4 fonty, `./`). S vypnutým serverem se stránka načte, fonty jsou k dispozici
+  (`document.fonts.check` → true), příklad se dá vyřešit a kostka přiroste.
+- Ověřeno i na živé adrese https://brnt.cz/matika — cache `matika-<hash>`, 10 položek.
 
 ## Sestavení a nasazení
 
