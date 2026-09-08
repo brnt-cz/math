@@ -1,10 +1,16 @@
 /* Vygenerováno build.py — needituj tady. */
-var CACHE = "matika-9a52b86032";
+var CACHE = "matika-ff541f7915";
 var ASSETS = ["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "fonts/baloo-2-latin-ext.woff2", "fonts/baloo-2-latin.woff2", "fonts/lexend-latin-ext.woff2", "fonts/lexend-latin.woff2"];
 
 self.addEventListener("install", function (e) {
-  e.waitUntil(caches.open(CACHE).then(function (c) { return c.addAll(ASSETS); })
-    .then(function () { return self.skipWaiting(); }));
+  // cache: "reload" obchází HTTP cache prohlížeče, aby se nepředcachovala stará verze
+  e.waitUntil(caches.open(CACHE).then(function (c) {
+    return Promise.all(ASSETS.map(function (u) {
+      return fetch(new Request(u, { cache: "reload" })).then(function (r) {
+        return r && r.ok ? c.put(u, r) : null;
+      });
+    }));
+  }).then(function () { return self.skipWaiting(); }));
 });
 
 self.addEventListener("activate", function (e) {

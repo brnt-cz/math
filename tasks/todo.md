@@ -9,6 +9,7 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
 - [x] Znaménka jako zaškrtávátka: `+`, `−`, `×`, `÷` — libovolná kombinace, aspoň jedno musí zůstat
 - [x] Priorita operací: `× ÷` se počítá před `+ −` (příklad je matematicky správný i pro cizí návštěvníky)
 - [x] Mezivýsledky vždy celé číslo v rozsahu 1–max (žádné minus, žádné přetečení, dělení beze zbytku)
+- [x] V rozsahu do 20 převážně příklady přes desítku (~85–100 %), pod deseti jen každý pátý
 - [x] Výsledek se píše velkými tlačítky nebo fyzickou klávesnicí (číslice, Backspace, Enter).
       Rámeček na výsledek **není `<input>`** — na mobilu/tabletu by při každém focusu
       vyskočila systémová klávesnice a posunula obrazovku. Číslice zapisujeme sami,
@@ -59,6 +60,17 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
       a nejde žádný požadavek na cizí server
 - [x] Blikající kurzor v rámečku: prázdný = před otazníkem, s číslem = za ním,
       výška i střed podle číslic (naměřeno: číslice sahají −0,022em..0,63em)
+
+## Lekce
+
+- **`grid-auto-rows: 1fr` je `minmax(auto, 1fr)`** — řady se nesmí zmenšit pod obsah,
+  takže mřížka klávesnice vytekla z rámce a překryla puntíky. Správně `minmax(0, 1fr)`
+  plus `min-height: 0` a `line-height: 1` na tlačítkách.
+- **Media query nezvyšuje specificitu.** Bloky pro rozvržení musí být v souboru
+  za základními styly komponent, jinak je komponenty přebijí (narazil jsem na to dvakrát:
+  u `.page:not(.has-chest)` a u rozvržení na šířku).
+- **Při testování pozor na service worker** — v prohlížeči servíroval starou stránku
+  a měřil jsem neexistující chybu. Před měřením ho odregistrovat a vyhodit cache.
 
 ## Review
 
