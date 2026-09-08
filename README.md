@@ -82,9 +82,6 @@ protože fragment nemůže odkazovat na lokální soubory.
 ```bash
 python3 build.py            # src/matika.html → index.html + sw.js
 python3 build.py --icons    # jen když se mění ikona
-
-rsync -az index.html manifest.json sw.js icon-*.png pi:/www/matika/
-rsync -az fonts/*.woff2 pi:/www/matika/fonts/
 ```
 
 `index.html` i `sw.js` jsou v repu commitnuté schválně — nasazení je jen kopie souborů.
