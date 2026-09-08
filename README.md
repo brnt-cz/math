@@ -36,6 +36,15 @@ Rozvržení se řídí orientací, ne jen šířkou: **na výšku** má hra celo
 s truhlami jsou v pásu pod klávesnicí (na tabletu s většími kostkami), **na šířku**
 se přesunou do svislého pruhu vpravo. Příklady mají prioritu, gamifikace je vedlejší.
 
+**Na šířku se celá appka vejde do okna bez posuvníku** — stránka má výšku `100svh`
+a o zbylou výšku se dělí sešit s klávesnicí (`flex` + `grid-auto-rows: 1fr`), takže
+klávesnice je na Full HD velká a na nízkém okně menší, ale vždy celá vidět. Velikost
+písma na tlačítkách se počítá z výšky sloupce (`cqh`). Na velmi nízkém okně (telefon
+na šířku) se nastavení srovná do jednoho řádku bez popisků.
+
+Na výšku se bez posuvníku vejdou tablety; na telefonu je vidět celá hra a scrolluje
+se jen k pásu s kostkami.
+
 ## PWA a offline
 
 Appka jde přidat na plochu telefonu/tabletu a funguje **bez sítě**:
