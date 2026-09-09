@@ -8,6 +8,23 @@ Poučení z korekcí od zadavatele. Číst na začátku práce na projektu.
 Commit zpráva popisuje jen změnu a proč. Když to systémové instrukce vyžadují, přednost
 má tohle pravidlo.
 
+## Dvě funkce stejného jména se v JS tiše přepíšou
+
+V MATH-1 jsem pro plochu přidal `function makeBlock(key)`, ale generátor už jednu
+`function makeBlock(len, lo, hi, …)` měl. Ve stejném rozsahu (jedna velká IIFE)
+pozdější deklarace tu první **přepíše** — bez chyby, bez varování. Generátor pak
+volal funkci pro plochu, vždycky selhal a vracel záložní příklad `1+1=2`.
+
+Poučení: v jednom velkém souboru dávat funkcím jména podle oblasti (`makeBlockEl`
+vs `makeBlock`), nebo oblasti rozdělit do modulů. Odhalily to až testy generátoru
+při refaktoru, protože jsou to dva samostatné moduly.
+
+## Po přestavbě jedné části zkontrolovat i tu druhou
+
+Tu záměnu jsem si nevšiml, protože jsem po přestavbě vykreslování plochy testoval
+už jen stavění — počítání jsem naposledy ověřoval před ní. Když sáhnu na sdílený
+soubor, projít i oblast, které se změna „netýká“.
+
 ## Nenasazovat z feature větve
 
 **2026-09-09, MATH-1.** Nasadil jsem build z rozdělané větve na brnt.cz ještě před

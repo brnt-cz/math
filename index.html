@@ -1790,7 +1790,7 @@
       for (var x = 0; x < BUILD_COLS; x++) {
         var key = x + "," + y;
         el.canvas.appendChild(makeCell(key));
-        var blk = makeBlock(key);
+        var blk = makeBlockEl(key);
         if (blk) el.canvas.appendChild(blk);
       }
     }
@@ -1808,7 +1808,7 @@
   }
 
   /* Kostka přečnívá nad svůj terč, proto je to samostatný prvek bez reakce na prst. */
-  function makeBlock(key) {
+  function makeBlockEl(key) {
     var type = build[key];
     if (!type) return null;
 
@@ -1826,7 +1826,7 @@
   function repaintCell(key) {
     var old = el.canvas.querySelector('[data-blk="' + key + '"]');
     if (old) old.remove();
-    var blk = makeBlock(key);
+    var blk = makeBlockEl(key);
     if (blk) el.canvas.appendChild(blk);
   }
 
