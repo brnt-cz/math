@@ -1,0 +1,78 @@
+/** Druhy kostek: vzhled, názvy a vážená vzácnost. */
+
+export const BLOCKS = ["grass", "stone", "plank", "sand", "nether", "obsidian"] as const;
+
+export type Block = (typeof BLOCKS)[number];
+
+/** Šance v procentech, od nejběžnějšího po nejvzácnější. Součet je 100. */
+export const RARITY: Record<Block, number> = {
+  grass: 27,
+  stone: 24,
+  plank: 20,
+  sand: 15,
+  nether: 9,
+  obsidian: 5,
+};
+
+export const NAMES: Record<Block, string> = {
+  grass: "Blok trávy",
+  stone: "Kámen",
+  plank: "Dubová prkna",
+  sand: "Písek",
+  nether: "Netherrack",
+  obsidian: "Obsidián",
+};
+
+export const STACK = 64;
+
+/**
+ * Druh kostky podle jejího indexu. Je to hash, ne náhoda — kostka si svůj druh
+ * drží při každém překreslení i po uložení do truhly, a nikde se neukládá.
+ */
+export function blockFor(index: number): Block {
+  let h = Math.imul(index + 1, 2654435761);
+  h ^= h >>> 15;
+  h = Math.imul(h, 668265263);
+  h ^= h >>> 13;
+
+  const roll = (h >>> 0) % 100;
+  let acc = 0;
+
+  for (const block of BLOCKS) {
+    acc += RARITY[block];
+    if (roll < acc) return block;
+  }
+  return BLOCKS[0];
+}
+
+export type Counts = Partial<Record<Block, number>>;
+
+/** Kolik je kterého druhu mezi indexy [from, to). */
+export function countTypes(from: number, to: number, into: Counts = {}): Counts {
+  for (let i = from; i < to; i++) {
+    const block = blockFor(i);
+    into[block] = (into[block] ?? 0) + 1;
+  }
+  return into;
+}
+
+/** Kolik políček obsah zabere — každý druh se láme po 64 na stack. */
+export function usedSlots(counts: Counts): number {
+  return BLOCKS.reduce((n, block) => n + Math.ceil((counts[block] ?? 0) / STACK), 0);
+}
+
+export type Stack = { type: Block; n: number };
+
+/** Obsah rozložený do stacků v pořadí druhů, jak se ukazuje v inventáři. */
+export function stacksOf(counts: Counts): Stack[] {
+  const stacks: Stack[] = [];
+
+  for (const type of BLOCKS) {
+    let left = counts[type] ?? 0;
+    while (left > 0) {
+      stacks.push({ type, n: Math.min(STACK, left) });
+      left -= STACK;
+    }
+  }
+  return stacks;
+}

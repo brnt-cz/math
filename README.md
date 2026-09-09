@@ -61,27 +61,54 @@ Appka jde přidat na plochu telefonu/tabletu a funguje **bez sítě**:
   latin + latin-ext kvůli diakritice) — offline tedy nechybí a nejde
   ani žádný požadavek na cizí server.
 
-Verze pro Claude Artifact (`src/matika.html`) si naopak nechává odkaz na Google Fonts,
-protože fragment nemůže odkazovat na lokální soubory.
+Verze pro Claude Artifact (`artifact/matika.html`) je jeden soubor s inlinovaným JS
+a CSS, bez obálky `<html>/<head>/<body>` — a fonty si bere z Google CDN, protože
+fragment nemůže odkazovat na lokální soubory.
 
 ## Struktura
 
-    src/matika.html   zdroj — fragment bez <html>/<head>/<body>
-    build.py          sestaví index.html: dolepí <head> (favicona jako inline SVG),
-                      nahradí odkaz na Google Fonts lokálním @font-face,
-                      přidá registraci service workeru a vygeneruje sw.js
-    index.html        vygenerovaný výsledek, tohle se nasazuje
-    sw.js             vygenerovaný service worker (needitovat ručně)
-    manifest.json     PWA manifest
-    fonts/            woff2 + fonts.json (rozsahy znaků pro @font-face)
-    icon-*.png        ikony appky (generuje `build.py --icons`, potřebuje rsvg-convert)
-    tasks/todo.md     průběh práce a ověření
+    app/                   zdroj: Vue 3 + TypeScript
+      index.html           šablona pro Vite
+      src/lib/             čistá logika bez DOM — tady jsou testy
+        blocks.ts          druhy kostek, vážená vzácnost, hash, stacky
+        generator.ts       příklady: bloky, priorita × ÷, rozsah, přes desítku
+        chest.ts           truhly: plnění po 50, 64 na políčko, kdy přistavit další
+        wall.ts            mřížka zdi: řady/sloupce, skokové zmenšení s hysterezí
+        inventory.ts       stavění: zásoba = nasbírané − na ploše, položit/vzít/přesunout
+        storage.ts         localStorage včetně migrace starých formátů
+      src/composables/     useGame (stav a kolo příkladů), useSideLayout, usePointerTip
+      src/components/      SetupPanel, TaskSheet, Keypad, RoundProgress, RoundDone,
+                           BrickWall, ChestColumn, BuildArea, BlockSprite, BlockDefs
+      src/styles/app.css   CSS přenesené doslova z první verze
+      src/assets/fonts/    woff2 (Vite je hashuje)
+      public/              manifest.json a ikony
+    dist/                  build — tohle se nasazuje (commituje se)
+    artifact/matika.html   build pro publikování jako Claude Artifact (commituje se)
+    scripts/postbuild.mjs  favicona, sw.js s precache, artifact
+    tests/                 vitest — 40 testů logiky
+    tasks/                 plány, průběh a lekce
 
 ## Sestavení a nasazení
 
 ```bash
-python3 build.py            # src/matika.html → index.html + sw.js
-python3 build.py --icons    # jen když se mění ikona
+npm install
+npm run dev      # vývoj na localhostu
+npm test         # 40 testů logiky, bez prohlížeče
+npm run build    # kontrola typů + vite build + postbuild → dist/ a artifact/matika.html
 ```
 
-`index.html` i `sw.js` jsou v repu commitnuté schválně — nasazení je jen kopie souborů.
+Nasazení je kopie souborů. `--delete` je poprvé potřeba, aby ze serveru zmizely
+soubory staré verze (assety mají v názvu hash, jinak by se tam vršily):
+
+```bash
+rsync -az --delete dist/ pi:/www/matika/
+```
+
+`dist/` i `artifact/matika.html` jsou v repu commitnuté schválně, aby nasazení
+nepotřebovalo build na serveru.
+
+### Proč je CSS v jednom souboru
+
+`app/src/styles/app.css` je CSS z první verze **doslova**. Pořadí pravidel je nosné:
+bloky pro rozvržení musí zůstat za styly komponent, jinak je komponenty přebijí
+(media query nezvyšuje specificitu). Rozdělovat to má smysl teprve s vizuálními testy.

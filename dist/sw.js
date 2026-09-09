@@ -1,6 +1,6 @@
-/* Vygenerováno build.py — needituj tady. */
-var CACHE = "matika-fc07a7cf7f";
-var ASSETS = ["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "fonts/baloo-2-latin-ext.woff2", "fonts/baloo-2-latin.woff2", "fonts/lexend-latin-ext.woff2", "fonts/lexend-latin.woff2"];
+/* Vygenerováno scripts/postbuild.mjs — needituj tady. */
+var CACHE = "matika-bc85aff7c1";
+var ASSETS = ["./","index.html","manifest.json","icon-192.png","icon-512.png","icon-maskable-512.png","assets/baloo-2-latin-B_TVFhwJ.woff2","assets/baloo-2-latin-ext-Dz43yst_.woff2","assets/index-CvVKNiTR.js","assets/lexend-latin-ci0D1wrL.woff2","assets/lexend-latin-ext-B6JQhE1e.woff2","assets/style-CTiCpZ1E.css"];
 
 self.addEventListener("install", function (e) {
   // cache: "reload" obchází HTTP cache prohlížeče, aby se nepředcachovala stará verze
