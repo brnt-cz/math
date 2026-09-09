@@ -89,15 +89,14 @@ commitu větve.
 - [x] `lib/wall.ts` + 7 testů (řady/sloupce, skokové zmenšení, hystereze, dno)
 - [x] `lib/inventory.ts` + 8 testů (zásoba, položit/vzít/přesunout, invariant, poškozená data)
 - [x] `lib/storage.ts` + 8 testů (migrace `ops` jako textu, round-trip, nesmysly, nedostupné úložiště)
-- [ ] Komponenty: počítání (Setup, Sheet, Keypad, Progress, Done)
-- [ ] Komponenty: zeď a truhly (Wall, Chest, ChestPanel)
-- [ ] Komponenty: stavění (BuildCanvas, Palette)
-- [ ] Styly: přenést CSS **doslova** (jen rozdělit do souborů podle sekcí), stejně SVG symboly kostek a truhel
-- [ ] Grafické srovnání se starou verzí: geometrie a spočítané styly klíčových prvků
-      na stejných rozměrech + screenshoty vedle sebe
-- [ ] `scripts/postbuild.mjs`: sw.js s precache, artifact/matika.html
-- [ ] Měření v prohlížeči proti staré verzi
-- [ ] Smazat starou verzi, upravit README a způsob nasazení
+- [x] Komponenty: počítání (SetupPanel, TaskSheet, Keypad, RoundProgress, RoundDone)
+- [x] Komponenty: zeď a truhly (BrickWall, ChestColumn)
+- [x] Komponenty: stavění (BuildArea)
+- [x] Styly: CSS přeneseno **doslova** v jednom souboru (pořadí pravidel je nosné), SVG symboly původní
+- [x] Grafické srovnání: 22 prvků shodných na 1280×900, 810×1080, 390×844 i 844×390
+- [x] `scripts/postbuild.mjs`: favicona, sw.js s precache, artifact/matika.html
+- [x] Offline ověřeno s vypnutým serverem (12 položek v cache, počítání funguje)
+- [x] Smazána stará verze, README a nasazení upraveno
 - [ ] PR s odkazem na MATH-2
 
 ## Nalezené při portování
@@ -117,4 +116,30 @@ commitu větve.
 
 ## Review
 
-(doplní se po dokončení)
+### Ověřeno
+
+- **40 testů logiky** bez prohlížeče (generátor 10, truhly 7, zeď 7, inventář 8, úložiště 8).
+- **Grafika je shodná se starou verzí:** pozice i spočítané styly 22 klíčových prvků
+  na 1280×900, 810×1080, 390×844 a 844×390 — všude 22/22, posuvník stejný.
+- **Offline:** s vypnutým serverem se stránka načte ze service workeru (12 položek
+  v cache), fonty jsou k dispozici a příklad se dá vyřešit (kostek 16 → 17).
+- **Artifact:** fragment se v minimální obálce namountuje, fonty z CDN naběhnou,
+  lokální `@font-face` je z něj odstraněný.
+
+### Co refaktor odhalil
+
+1. **Regrese v `main`** — v MATH-1 přidaná `makeBlock(key)` pro plochu přepsala
+   generátorovou `makeBlock(len, lo, hi, …)`, takže generátor vracel pořád `1+1=2`.
+   Opraveno zvlášť (PR #4). Bez modulů a testů by to našel až syn.
+2. **Dvě uvolnění pravidel generátoru byla spojená** — když se nepovedl příklad přes
+   desítku, druhý průchod zároveň povolil `x÷x`. Teď tři samostatné průchody.
+3. **`chestList` lhala o vstupu** — pro 49 kostek vyrobila truhlu s 50.
+4. **Můj dřívější test na `x÷x` byl vadný** — regex chytal i `3×6÷6` (= 18÷6).
+
+### Vědomá rozhodnutí
+
+- **CSS zůstalo v jednom souboru doslova.** Pořadí pravidel je nosné a rozdělovat ho
+  bez vizuálních testů by bylo proti požadavku „grafika musí zůstat identická“.
+- **`dist/` a `artifact/matika.html` se commitují**, aby nasazení nepotřebovalo build
+  na serveru — stejný princip jako dosud u `index.html`.
+- **Poprvé nasadit s `--delete`**, aby ze serveru zmizely soubory staré verze.
