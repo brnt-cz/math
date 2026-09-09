@@ -85,10 +85,10 @@ commitu větve.
 - [x] Scaffold: Vite + Vue 3 + TS + Vitest, `app/` vedle staré verze
 - [x] `lib/blocks.ts` (druhy, vzácnost, hash, stacky, obsazená políčka)
 - [x] `lib/generator.ts` + 10 testů (priorita, rozsah, přes desítku, dělení, determinismus)
-- [ ] `lib/chest.ts` + testy (plnění, stacky, kdy další truhla)
-- [ ] `lib/wall.ts` + testy (řady/sloupce, zmenšení, hystereze)
-- [ ] `lib/inventory.ts` + testy (zásoba, položit/vzít/přesunout, invariant)
-- [ ] `lib/storage.ts` + testy (migrace starých dat, round-trip)
+- [x] `lib/chest.ts` + 7 testů (plnění, stacky, kdy další truhla)
+- [x] `lib/wall.ts` + 7 testů (řady/sloupce, skokové zmenšení, hystereze, dno)
+- [x] `lib/inventory.ts` + 8 testů (zásoba, položit/vzít/přesunout, invariant, poškozená data)
+- [x] `lib/storage.ts` + 8 testů (migrace `ops` jako textu, round-trip, nesmysly, nedostupné úložiště)
 - [ ] Komponenty: počítání (Setup, Sheet, Keypad, Progress, Done)
 - [ ] Komponenty: zeď a truhly (Wall, Chest, ChestPanel)
 - [ ] Komponenty: stavění (BuildCanvas, Palette)
@@ -101,6 +101,11 @@ commitu větve.
 - [ ] PR s odkazem na MATH-2
 
 ## Nalezené při portování
+
+- **`chestList` lhala o vstupu.** Pro 49 kostek vyrobila truhlu s 50 — v původním kódu
+  to nevadilo, protože `banked` je vždy násobek padesáti, ale jako čistá funkce to
+  být nesmí. Teď se vstup zarovná na celé padesátky, což odpovídá skutečnosti:
+  nedokončená padesátka leží pořád na zdi.
 
 - **Dvě uvolnění pravidel byla spojená v jedno.** Když se nepovedlo vygenerovat příklad
   přes desítku, druhý průchod zároveň povolil dělení sebou samým. To odporuje tomu, co
