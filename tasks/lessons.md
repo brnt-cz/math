@@ -40,3 +40,9 @@ Pro pružné řady `minmax(0, 1fr)` + `min-height: 0` na dětech.
 `pointerdown` na paletě překresloval celou paletu → tlačítko zmizelo z DOM,
 `setPointerCapture` na odpojeném prvku spadl a tažení se přerušilo. Změna výběru
 má přepnout jen atribut, ne přestavět DOM.
+
+## Playwright `dragTo` nemusí sehrát tažení jako prst
+
+Přesun kostky na paletu přes `dragTo` neproběhl, i když ruční sehrání
+`pointerdown → pointermove → pointerup` na stejných souřadnicích fungovalo.
+Když `dragTo` selže, ověřit ručně sehranou sekvencí, než začnu hledat chybu v kódu.

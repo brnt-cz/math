@@ -1940,7 +1940,98 @@
 
   el.paletteRow.addEventListener("pointercancel", endDrag);
 
+  /* ---- přesouvání už položené kostky ---- */
+
+  var move = null;
+  var skipClick = false;
+
+  function endMove(restore) {
+    if (move) {
+      if (move.ghost) move.ghost.remove();
+      if (restore) repaintCell(move.from);
+    }
+    var hinted = el.canvas.querySelector(".cell.hint");
+    if (hinted) hinted.classList.remove("hint");
+    move = null;
+  }
+
+  el.canvas.addEventListener("pointerdown", function (e) {
+    var cell = e.target.closest(".cell");
+    if (!cell || wrecking) return;
+
+    var key = cell.dataset.key;
+    if (!build[key]) return;        // prázdné pole se plní klepnutím, ne tažením
+
+    move = { from: key, type: build[key], moved: false, ghost: null };
+    try { el.canvas.setPointerCapture(e.pointerId); } catch (err) { /* nevadí */ }
+  });
+
+  el.canvas.addEventListener("pointermove", function (e) {
+    if (!move) return;
+
+    if (!move.moved) {
+      move.moved = true;
+      // kostku zvedneme: zmizí z místa a drží se pod prstem
+      var lifted = el.canvas.querySelector('[data-blk="' + move.from + '"]');
+      if (lifted) lifted.remove();
+
+      move.ghost = document.createElement("div");
+      move.ghost.className = "drag";
+      move.ghost.style.width = move.ghost.style.height = cellSize() + "px";
+      move.ghost.appendChild(blockSprite(move.type));
+      document.body.appendChild(move.ghost);
+    }
+
+    var size = cellSize();
+    move.ghost.style.left = (e.clientX - size / 2) + "px";
+    move.ghost.style.top = (e.clientY - size / 2) + "px";
+
+    var hinted = el.canvas.querySelector(".cell.hint");
+    if (hinted) hinted.classList.remove("hint");
+    var over = cellAt(e.clientX, e.clientY);
+    if (over && !build[over.dataset.key]) over.classList.add("hint");
+  });
+
+  el.canvas.addEventListener("pointerup", function (e) {
+    if (!move) return;
+
+    var from = move.from;
+    var type = move.type;
+    var moved = move.moved;
+
+    if (!moved) {                   // jen klepnutí: vezmi si ten druh do ruky
+      endMove(false);
+      picked = type;
+      markPicked();
+      skipClick = true;
+      return;
+    }
+
+    var over = cellAt(e.clientX, e.clientY);
+    var onPalette = document.elementFromPoint(e.clientX, e.clientY);
+    onPalette = onPalette && onPalette.closest ? onPalette.closest(".palette") : null;
+
+    endMove(false);
+    skipClick = true;
+
+    if (over && !build[over.dataset.key]) {
+      delete build[from];
+      build[over.dataset.key] = type;
+      save();
+      repaintCell(from);
+      repaintCell(over.dataset.key);
+    } else if (onPalette) {
+      takeBlock(from);              // vytažením na paletu se kostka vrátí do truhly
+    } else {
+      repaintCell(from);            // nikam to nešlo, kostka zůstává
+    }
+  });
+
+  el.canvas.addEventListener("pointercancel", function () { endMove(true); });
+
   el.canvas.addEventListener("click", function (e) {
+    if (skipClick) { skipClick = false; return; }
+
     var cell = e.target.closest(".cell");
     if (!cell) return;
 
@@ -1957,7 +2048,7 @@
       return;
     }
 
-    if (picked) placeBlock(key, picked);
+    if (picked && !build[key]) placeBlock(key, picked);
   });
 
   el.wreck.addEventListener("click", function (e) {

@@ -75,7 +75,11 @@ Samotné přetahování je pro dítě na dotyku nepřesné, takže dvojkolejně:
 
 1. **tažení z palety na buňku** (Pointer Events, myš i prst) — jak je v zadání
 2. po položení zůstane druh vybraný → **další buňky jde jen klepat**
-3. **režim bourání** (přepínač) — klepnutí na kostku ji vrátí do truhly
+3. **přesun už položené kostky** tažením na jinou buňku; na obsazenou se nic nestane
+   a kostka zůstane, kde byla
+4. **klepnutí na položenou kostku** vezme její druh do ruky (jako „pick block“)
+5. **vytažení kostky na paletu** ji vrátí do truhly
+6. **režim bourání** (přepínač) — klepnutí na kostku ji vrátí do truhly
 
 Paleta = druhy z truhly se zbývajícími počty, vizuálně navazuje na dnešní inventář.
 Vybraný druh, kterého je 0, se nedá položit.
@@ -111,6 +115,8 @@ Zbytek appky se nedotkne ničeho z vnitřností stavění.
 - [x] Rozvržení: bez posuvníku na šířku, použitelné na telefonu i tabletu
 - [x] Ověření invariantu: `v truhle + na canvasu = nasbírané` pro všechny druhy
 - [x] Vykreslení jako 2,5D stoh bez mezer (na žádost zadavatele po první verzi)
+- [x] Přesouvání už položených kostek + pick block + vytažení na paletu
+- [ ] Vzhled plochy dopracovat — zadavatel zatím nespokojen, čeká se na směr
 - [x] PR s odkazem na MATH-1 (**nenasazeno** — na produkci jde až po sloučení)
 
 ## Review
@@ -131,6 +137,10 @@ Zbytek appky se nedotkne ničeho z vnitřností stavění.
   `v truhle + na ploše` u všech šesti druhů nezměněný (89 / 64 / 66 / 51 / 20 / 10 = 300).
 - **Bourání klepnutím na horní část kostky** sundá tu správnou (terč nad ní je prázdný,
   takže se použije kostka pod ním).
+- **Přesouvání položených kostek:** tažení na prázdnou buňku kostku přemístí (počet
+  na ploše i součty zůstanou), tažení na obsazenou ji nechá na místě, vytažení na paletu
+  ji vrátí do truhly (41 → 40 kostek, zásoba +1), klepnutí vezme druh do ruky.
+  Součty po všech operacích: 89 / 64 / 66 / 51 / 20 / 10 = 300 = `banked`.
 - **Persistence:** stavba přežije reload. Klepnutí na buňku bez vybraného druhu nic nedělá.
 - **Bez regrese:** přepnutí tam a zpět vrátí hru, zeď i truhly; počítání dál funguje
   (`15+1+2=18` → „Správně! Kostka nahoru.“).
