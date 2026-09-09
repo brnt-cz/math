@@ -72,6 +72,13 @@ Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https:
 - **Při testování pozor na service worker** — v prohlížeči servíroval starou stránku
   a měřil jsem neexistující chybu. Před měřením ho odregistrovat a vyhodit cache.
 
+## Tasky v TODOcku
+
+Zadání pro tento projekt vznikají v TODOcku (projekt `MATH`), větev se jmenuje podle kódu tasku.
+
+- **MATH-1 — Stavění z kostiček** → [tasks/MATH-1-staveni-z-kosticek.md](MATH-1-staveni-z-kosticek.md)
+- **MATH-2 — Refactor do Vue 3** (backlog)
+
 ## Review
 
 - **Generátor ověřen programově:** 36 000 příkladů přes všechny kombinace rozsahu (10/20),

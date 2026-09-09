@@ -486,6 +486,163 @@
 
   .mc-tip.on { display: block; }
 
+  /* ---------- stavění ---------- */
+
+  .mode {
+    appearance: none;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    background: var(--card);
+    color: var(--accent);
+    font: inherit;
+    font-weight: 600;
+    font-size: .8125rem;
+    padding: .25rem .875rem;
+    cursor: pointer;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .mode[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); }
+  .mode:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+
+  .mode.locked {
+    border-color: var(--line);
+    color: var(--ink-soft);
+    cursor: default;
+  }
+
+  .build {
+    grid-area: main;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+  }
+
+  .canvas-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: .5rem;
+    overflow: hidden;
+  }
+
+  /* Kostky se kladou do jedné vrstvy, ale kreslí se jako stoh: řady se překrývají
+     o čtvrtinu kostky (stejně jako zeď), takže mezi nimi nejsou mezery a stavba
+     se čte prostorově. Rozteč řady je proto 0,75 × šířka kostky. */
+  .canvas {
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    width: calc(var(--cols-b) * var(--cell));
+    height: calc((var(--rows-b) - 1) * var(--cell) * 0.75 + var(--cell));
+    touch-action: none;
+  }
+
+  /* terč pro prst: výška = rozteč řady, takže se terče nepřekrývají */
+  .cell {
+    position: absolute;
+    left: calc(var(--c) * var(--cell));
+    bottom: calc(var(--r) * var(--cell) * 0.75);
+    width: var(--cell);
+    height: calc(var(--cell) * 0.75);
+    z-index: 1;
+    box-shadow: inset -1px -1px 0 var(--line);
+  }
+
+  .cell.hint { background: var(--accent-soft); }
+
+  /* kostka je čtvercová a přečnívá nad svůj terč — vyšší řada kreslí přes spodní */
+  .blk {
+    position: absolute;
+    left: calc(var(--c) * var(--cell));
+    bottom: calc(var(--r) * var(--cell) * 0.75);
+    width: var(--cell);
+    height: var(--cell);
+    z-index: calc(2 + var(--r));
+    pointer-events: none;
+  }
+
+  .blk svg { display: block; width: 100%; height: 100%; }
+
+  .palette {
+    flex: 0 0 auto;
+    user-select: none;
+    -webkit-user-select: none;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .palette-row {
+    flex: 1 1 auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .375rem;
+  }
+
+  .pick {
+    position: relative;
+    flex: 0 0 auto;
+    appearance: none;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    padding: .1875rem;
+    width: 2.5rem;
+    cursor: pointer;
+    touch-action: none;
+  }
+
+  .pick svg { display: block; width: 100%; height: auto; }
+  .pick b {
+    display: block;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: .8125rem;
+    line-height: 1.1;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pick[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .pick:disabled { opacity: .4; cursor: default; }
+  .pick:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+
+  .wreck {
+    flex: 0 0 auto;
+    appearance: none;
+    border: 2px solid var(--line);
+    border-radius: 10px;
+    background: var(--card);
+    color: var(--ink-soft);
+    font: inherit;
+    font-weight: 600;
+    font-size: .875rem;
+    padding: .5rem .75rem;
+    cursor: pointer;
+  }
+
+  .wreck[aria-pressed="true"] { border-color: var(--bad); background: var(--bad); color: #FFFFFF; }
+  .wreck:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+
+  /* kostka tažená prstem/myší */
+  .drag {
+    position: fixed;
+    z-index: 70;
+    pointer-events: none;
+    opacity: .9;
+  }
+
+  .drag svg { display: block; width: 100%; height: 100%; }
+
   /* ---------- list papíru ---------- */
 
   .sheet {
@@ -807,6 +964,16 @@
     .dot { width: .625rem; height: .625rem; border-width: 2px; }
   }
 
+  /* Režim stavění zabírá celou stránku — zeď ani truhly se nezobrazují.
+     Musí být za pravidly pro orientaci, jinak by ho přebila (stejná specificita). */
+  .page.building {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "main";
+    min-height: 100svh;
+  }
+
+  .page.building .build { justify-content: center; }
+
 </style>
 
 <svg class="blk-defs" aria-hidden="true" width="0" height="0" focusable="false"><defs>
@@ -823,6 +990,11 @@
 <div class="page" id="page">
 <div class="top">
   <h1>Matika do dvaceti</h1>
+
+  <button type="button" class="mode" id="mode" aria-pressed="false" hidden>
+    <span id="mode-label">Stavění</span>
+  </button>
+
   <div class="best">série <b id="streak">0</b> · nejlepší <b id="best">0</b></div>
 </div>
 
@@ -888,6 +1060,17 @@
   <p class="foot">Enter zkontroluje, Backspace maže. Za 50 kostek se zeď uloží do truhly — co je v truhle, už nespadne.</p>
 </div>
 
+<div class="build" id="build" hidden>
+  <div class="canvas-wrap">
+    <div class="canvas" id="canvas" aria-label="Plocha na stavění"></div>
+  </div>
+
+  <div class="palette" id="palette">
+    <div class="palette-row" id="palette-row"></div>
+    <button type="button" class="wreck" id="wreck" aria-pressed="false">Bourat</button>
+  </div>
+</div>
+
 <div class="rail" id="rail">
   <div class="bw-probe" id="bw-probe" aria-hidden="true"></div>
   <span class="lab">Zeď</span>
@@ -948,6 +1131,9 @@
   best = Math.max(0, parseInt(saved.best, 10) || 0);
 
   var tower = Math.max(0, parseInt(saved.tower, 10) || 0);
+  var BUILD_COLS = 16;   // pevná logická mřížka, ať stavba vypadá stejně na každém displeji
+  var BUILD_ROWS = 12;
+
   var banked = Math.max(0, parseInt(saved.banked, 10) || 0);
   banked -= banked % BANK_SIZE;      // v truhle jsou vždy celé padesátky
 
@@ -960,6 +1146,7 @@
 
   var el = {
     task: document.getElementById("task"),
+    wrap: document.querySelector(".wrap"),
     note: document.getElementById("note"),
     sheet: document.getElementById("sheet"),
     pad: document.getElementById("pad"),
@@ -983,7 +1170,14 @@
     chestN: document.getElementById("chest-n"),
     chestTitle: document.getElementById("chest-title"),
     chestSize: document.getElementById("chest-size"),
-    chestGrid: document.getElementById("chest-grid")
+    chestGrid: document.getElementById("chest-grid"),
+    mode: document.getElementById("mode"),
+    modeLabel: document.getElementById("mode-label"),
+    build: document.getElementById("build"),
+    canvas: document.getElementById("canvas"),
+    canvasWrap: document.querySelector(".canvas-wrap"),
+    paletteRow: document.getElementById("palette-row"),
+    wreck: document.getElementById("wreck")
   };
 
   var answer = null;   // rámeček s výsledkem (obyčejný prvek, ne <input>)
@@ -994,7 +1188,7 @@
     try {
       localStorage.setItem(KEY, JSON.stringify({
         range: cfg.range, terms: cfg.terms, ops: cfg.ops, best: best,
-        tower: tower, banked: banked
+        tower: tower, banked: banked, build: build
       }));
     } catch (e) {}
   }
@@ -1230,6 +1424,17 @@
 
   /* Kostka = izometrický kubus ze <symbol>; --r je patro odspodu, --c sloupec.
      Vyšší patro leží nad spodním i v z-ose. */
+  /* Sprite kostky — používá ho zeď, inventář truhly i plocha na stavění. */
+  function blockSprite(type) {
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("viewBox", "0 0 32 32");
+    svg.setAttribute("aria-hidden", "true");
+    var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
+    use.setAttribute("href", "#blk-" + type);
+    svg.appendChild(use);
+    return svg;
+  }
+
   function makeBrick(index, row, col) {
     var type = blockFor(index);
     var b = document.createElement("div");
@@ -1237,13 +1442,7 @@
     b.style.setProperty("--r", String(row));
     b.style.setProperty("--c", String(col));
     b.dataset.name = NAMES[type];
-    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", "0 0 32 32");
-    svg.setAttribute("aria-hidden", "true");
-    var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-    use.setAttribute("href", "#blk-" + type);
-    svg.appendChild(use);
-    b.appendChild(svg);
+    b.appendChild(blockSprite(type));
     return b;
   }
 
@@ -1435,13 +1634,7 @@
 
       if (stack) {
         cell.dataset.name = NAMES[stack.type];
-        var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("viewBox", "0 0 32 32");
-        svg.setAttribute("aria-hidden", "true");
-        var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
-        use.setAttribute("href", "#blk-" + stack.type);
-        svg.appendChild(use);
-        cell.appendChild(svg);
+        cell.appendChild(blockSprite(stack.type));
 
         var n = document.createElement("b");
         n.textContent = String(stack.n);
@@ -1461,6 +1654,407 @@
     el.chestCol.classList.add("open");
   }
 
+
+  /* ================== stavění z kostiček (MATH-1) ==================
+     Jediný nový ukládaný stav je `build` — mapa "x,y" → druh kostky.
+     Kolik čeho zbývá v truhle se nikde neukládá, počítá se jako
+     nasbírané(druh) − kostky téhož druhu na ploše. Nemůže tak vzniknout
+     rozpor mezi dvěma čísly a poškozený localStorage se sám srovná. */
+
+  var build = {};
+  var building = false;   // režim stavění
+  var picked = null;      // vybraný druh z palety
+  var wrecking = false;   // režim bourání
+  var collectedAt = -1;   // pro jaké `banked` je spočítané `collectedCounts`
+  var collectedCounts = {};
+
+  (function loadBuild() {
+    if (!saved.build || typeof saved.build !== "object") return;
+    Object.keys(saved.build).forEach(function (key) {
+      var m = /^(\d+),(\d+)$/.exec(key);
+      var type = saved.build[key];
+      if (!m || BLOCKS.indexOf(type) === -1) return;
+      if (+m[1] < BUILD_COLS && +m[2] < BUILD_ROWS) build[key] = type;
+    });
+  })();
+
+  function collected() {
+    if (collectedAt !== banked) {
+      collectedCounts = countTypes(0, banked);
+      collectedAt = banked;
+    }
+    return collectedCounts;
+  }
+
+  function onCanvas(type) {
+    var n = 0;
+    Object.keys(build).forEach(function (k) { if (build[k] === type) n++; });
+    return n;
+  }
+
+  function stock(type) {
+    return Math.max(0, (collected()[type] || 0) - onCanvas(type));
+  }
+
+  /* Odemyká se, až je první truhla doslova plná — stejné pravidlo, které
+     rozhoduje o přistavení další truhly. `?stavet` jsou vrátka pro rodiče. */
+  function buildUnlocked() {
+    if (/[?&]stavet(=|&|$)/.test(location.search)) return true;
+    var first = chests[0];
+    return !!first && usedSlots(first.counts) >= first.slots;
+  }
+
+  function paintMode() {
+    var show = banked >= BANK_SIZE;
+    el.mode.hidden = !show;
+    if (!show) return;
+
+    var open = buildUnlocked();
+    el.mode.classList.toggle("locked", !open);
+    el.mode.setAttribute("aria-pressed", building ? "true" : "false");
+    el.mode.setAttribute("aria-disabled", open ? "false" : "true");
+
+    if (building) {
+      el.modeLabel.textContent = "Počítání";
+      el.mode.dataset.name = "Zpátky k příkladům";
+    } else if (open) {
+      el.modeLabel.textContent = "Stavění";
+      el.mode.dataset.name = "Postav si něco z nasbíraných kostek";
+    } else {
+      var first = chests[0];
+      el.modeLabel.textContent = "🔒 Stavění " + usedSlots(first.counts) + "/" + first.slots;
+      el.mode.dataset.name = "Stavění se otevře, až bude truhla plná";
+    }
+  }
+
+  function setMode(on) {
+    building = !!on && buildUnlocked();
+    el.page.classList.toggle("building", building);
+    el.build.hidden = !building;
+    el.wrap.hidden = building;
+    el.rail.hidden = building;
+
+    if (building) {
+      el.chestCol.hidden = true;
+      closeChest();
+      paintCanvas();
+      paintPalette();
+    } else {
+      paintChest();
+      paintTower(false);
+    }
+    paintMode();
+  }
+
+  /* Mřížka je pevná 16 × 12, takže stavba vypadá stejně na telefonu i na tabletu;
+     mění se jen velikost buňky podle dostupného místa. */
+  function cellSize() {
+    var box = el.canvasWrap;
+    var pad = 16;
+    var byWidth = (box.clientWidth - pad) / BUILD_COLS;
+    var height = box.clientHeight - pad;
+    // stavba je vysoká (rows − 1) × 0,75 + 1 kostky
+    var rowsTall = (BUILD_ROWS - 1) * 0.75 + 1;
+    var size = (SIDE_LAYOUT.matches && height > 40)
+      ? Math.min(byWidth, height / rowsTall)
+      : byWidth;
+    return Math.max(14, Math.floor(size));
+  }
+
+  function paintCanvas() {
+    el.canvas.style.setProperty("--cols-b", String(BUILD_COLS));
+    el.canvas.style.setProperty("--rows-b", String(BUILD_ROWS));
+    el.canvas.style.setProperty("--cell", cellSize() + "px");
+    el.canvas.textContent = "";
+
+    for (var y = 0; y < BUILD_ROWS; y++) {
+      for (var x = 0; x < BUILD_COLS; x++) {
+        var key = x + "," + y;
+        el.canvas.appendChild(makeCell(key));
+        var blk = makeBlock(key);
+        if (blk) el.canvas.appendChild(blk);
+      }
+    }
+  }
+
+  /* Terč pro prst — leží ve své řadě, terče se nepřekrývají. */
+  function makeCell(key) {
+    var xy = key.split(",");
+    var cell = document.createElement("div");
+    cell.className = "cell";
+    cell.dataset.key = key;
+    cell.style.setProperty("--c", xy[0]);
+    cell.style.setProperty("--r", String(BUILD_ROWS - 1 - +xy[1]));
+    return cell;
+  }
+
+  /* Kostka přečnívá nad svůj terč, proto je to samostatný prvek bez reakce na prst. */
+  function makeBlock(key) {
+    var type = build[key];
+    if (!type) return null;
+
+    var xy = key.split(",");
+    var blk = document.createElement("div");
+    blk.className = "blk";
+    blk.dataset.blk = key;
+    blk.dataset.name = NAMES[type];
+    blk.style.setProperty("--c", xy[0]);
+    blk.style.setProperty("--r", String(BUILD_ROWS - 1 - +xy[1]));
+    blk.appendChild(blockSprite(type));
+    return blk;
+  }
+
+  function repaintCell(key) {
+    var old = el.canvas.querySelector('[data-blk="' + key + '"]');
+    if (old) old.remove();
+    var blk = makeBlock(key);
+    if (blk) el.canvas.appendChild(blk);
+  }
+
+  function paintPalette() {
+    if (picked && stock(picked) === 0) picked = null;
+    el.paletteRow.textContent = "";
+
+    BLOCKS.forEach(function (type) {
+      var left = stock(type);
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "pick";
+      b.dataset.type = type;
+      b.dataset.name = NAMES[type] + " · v truhle " + left;
+      b.disabled = left === 0;
+      b.setAttribute("aria-pressed", picked === type ? "true" : "false");
+      b.appendChild(blockSprite(type));
+
+      var n = document.createElement("b");
+      n.textContent = String(left);
+      b.appendChild(n);
+
+      el.paletteRow.appendChild(b);
+    });
+  }
+
+  /* Vybrání druhu nesmí paletu překreslit — jinak zmizí tlačítko, na kterém
+     právě drží prst, a tažení se přeruší. */
+  function markPicked() {
+    Array.prototype.forEach.call(el.paletteRow.querySelectorAll(".pick"), function (b) {
+      b.setAttribute("aria-pressed", b.dataset.type === picked ? "true" : "false");
+    });
+  }
+
+  function placeBlock(key, type) {
+    if (build[key] || stock(type) <= 0) return;
+    build[key] = type;
+    save();
+    repaintCell(key);
+    paintPalette();
+  }
+
+  function takeBlock(key) {
+    if (!build[key]) return;
+    delete build[key];
+    save();
+    repaintCell(key);
+    paintPalette();
+  }
+
+  /* ---- tažení kostky z palety na plochu ---- */
+
+  var drag = null;
+
+  function cellAt(x, y) {
+    var node = document.elementFromPoint(x, y);
+    return node && node.closest ? node.closest(".cell") : null;
+  }
+
+  function endDrag() {
+    if (drag && drag.ghost) drag.ghost.remove();
+    var hinted = el.canvas.querySelector(".cell.hint");
+    if (hinted) hinted.classList.remove("hint");
+    drag = null;
+  }
+
+  el.paletteRow.addEventListener("pointerdown", function (e) {
+    var b = e.target.closest(".pick");
+    if (!b || b.disabled) return;
+
+    wrecking = false;
+    el.wreck.setAttribute("aria-pressed", "false");
+    picked = b.dataset.type;
+    markPicked();
+
+    drag = { type: picked, moved: false, ghost: null };
+
+    // bez zachycení ukazatele tažení nesleduje prst mimo tlačítko;
+    // pokládání klepnutím funguje i tak, takže chybu jen spolkneme
+    try { b.setPointerCapture(e.pointerId); } catch (err) { /* nevadí */ }
+  });
+
+  el.paletteRow.addEventListener("pointermove", function (e) {
+    if (!drag) return;
+
+    if (!drag.moved) {
+      drag.moved = true;
+      drag.ghost = document.createElement("div");
+      drag.ghost.className = "drag";
+      drag.ghost.style.width = drag.ghost.style.height = cellSize() + "px";
+      drag.ghost.appendChild(blockSprite(drag.type));
+      document.body.appendChild(drag.ghost);
+    }
+
+    var size = cellSize();
+    drag.ghost.style.left = (e.clientX - size / 2) + "px";
+    drag.ghost.style.top = (e.clientY - size / 2) + "px";
+
+    var hinted = el.canvas.querySelector(".cell.hint");
+    if (hinted) hinted.classList.remove("hint");
+    var cell = cellAt(e.clientX, e.clientY);
+    if (cell && !build[cell.dataset.key]) cell.classList.add("hint");
+  });
+
+  el.paletteRow.addEventListener("pointerup", function (e) {
+    if (!drag) return;
+    var type = drag.type;
+    var moved = drag.moved;
+    endDrag();
+
+    if (!moved) return;            // jen klepnutí = vybrání druhu
+    var cell = cellAt(e.clientX, e.clientY);
+    if (cell) placeBlock(cell.dataset.key, type);
+  });
+
+  el.paletteRow.addEventListener("pointercancel", endDrag);
+
+  /* ---- přesouvání už položené kostky ---- */
+
+  var move = null;
+  var skipClick = false;
+
+  function endMove(restore) {
+    if (move) {
+      if (move.ghost) move.ghost.remove();
+      if (restore) repaintCell(move.from);
+    }
+    var hinted = el.canvas.querySelector(".cell.hint");
+    if (hinted) hinted.classList.remove("hint");
+    move = null;
+  }
+
+  el.canvas.addEventListener("pointerdown", function (e) {
+    var cell = e.target.closest(".cell");
+    if (!cell || wrecking) return;
+
+    var key = cell.dataset.key;
+    if (!build[key]) return;        // prázdné pole se plní klepnutím, ne tažením
+
+    // bez preventDefault by druhé stisknutí nad výběrem spustilo nativní tažení,
+    // které pošle pointercancel a náš přesun zruší
+    e.preventDefault();
+
+    move = { from: key, type: build[key], moved: false, ghost: null };
+    try { el.canvas.setPointerCapture(e.pointerId); } catch (err) { /* nevadí */ }
+  });
+
+  el.canvas.addEventListener("pointermove", function (e) {
+    if (!move) return;
+
+    if (!move.moved) {
+      move.moved = true;
+      // kostku zvedneme: zmizí z místa a drží se pod prstem
+      var lifted = el.canvas.querySelector('[data-blk="' + move.from + '"]');
+      if (lifted) lifted.remove();
+
+      move.ghost = document.createElement("div");
+      move.ghost.className = "drag";
+      move.ghost.style.width = move.ghost.style.height = cellSize() + "px";
+      move.ghost.appendChild(blockSprite(move.type));
+      document.body.appendChild(move.ghost);
+    }
+
+    var size = cellSize();
+    move.ghost.style.left = (e.clientX - size / 2) + "px";
+    move.ghost.style.top = (e.clientY - size / 2) + "px";
+
+    var hinted = el.canvas.querySelector(".cell.hint");
+    if (hinted) hinted.classList.remove("hint");
+    var over = cellAt(e.clientX, e.clientY);
+    if (over && !build[over.dataset.key]) over.classList.add("hint");
+  });
+
+  el.canvas.addEventListener("pointerup", function (e) {
+    if (!move) return;
+
+    var from = move.from;
+    var type = move.type;
+    var moved = move.moved;
+
+    if (!moved) {                   // jen klepnutí: vezmi si ten druh do ruky
+      endMove(false);
+      picked = type;
+      markPicked();
+      skipClick = true;
+      return;
+    }
+
+    var over = cellAt(e.clientX, e.clientY);
+    var onPalette = document.elementFromPoint(e.clientX, e.clientY);
+    onPalette = onPalette && onPalette.closest ? onPalette.closest(".palette") : null;
+
+    endMove(false);
+    skipClick = true;
+
+    if (over && !build[over.dataset.key]) {
+      delete build[from];
+      build[over.dataset.key] = type;
+      save();
+      repaintCell(from);
+      repaintCell(over.dataset.key);
+    } else if (onPalette) {
+      takeBlock(from);              // vytažením na paletu se kostka vrátí do truhly
+    } else {
+      repaintCell(from);            // nikam to nešlo, kostka zůstává
+    }
+  });
+
+  el.canvas.addEventListener("pointercancel", function () { endMove(true); });
+
+  el.build.addEventListener("dragstart", function (e) { e.preventDefault(); });
+
+  el.canvas.addEventListener("click", function (e) {
+    if (skipClick) { skipClick = false; return; }
+
+    var cell = e.target.closest(".cell");
+    if (!cell) return;
+
+    var key = cell.dataset.key;
+
+    if (wrecking) {
+      // horní čtvrtina kostky spadá do terče nad ní — když je prázdný, boura se ta pod
+      if (!build[key]) {
+        var xy = key.split(",");
+        var below = xy[0] + "," + (+xy[1] + 1);
+        if (build[below]) key = below;
+      }
+      takeBlock(key);
+      return;
+    }
+
+    if (picked && !build[key]) placeBlock(key, picked);
+  });
+
+  el.wreck.addEventListener("click", function (e) {
+    unfocus(e, el.wreck);
+    wrecking = !wrecking;
+    el.wreck.setAttribute("aria-pressed", wrecking ? "true" : "false");
+    if (wrecking) { picked = null; markPicked(); }
+  });
+
+  el.mode.addEventListener("click", function (e) {
+    unfocus(e, el.mode);
+    if (!buildUnlocked()) return;
+    setMode(!building);
+  });
+
   /* Vrací true, když se zeď právě uložila do truhly. */
   function towerAdd() {
     tower++;
@@ -1476,6 +2070,7 @@
     paintTower(!stored);
     if (stored) closeChest();
     paintChest();
+    paintMode();
 
     if (stored) {
       var top = el.chestStack.lastElementChild;   // nejvýš položená truhla
@@ -1655,6 +2250,7 @@
   document.addEventListener("keydown", function (e) {
     if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (e.key === "Escape") { closeChest(); return; }
+    if (building) return;
     if (!el.done.hidden) {
       if (e.key === "Enter") { e.preventDefault(); startRound(); }
       return;
@@ -1769,7 +2365,10 @@
 
   function scheduleRepaint(delay) {
     clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(function () { paintTower(false); }, delay);
+    resizeTimer = setTimeout(function () {
+      if (building) paintCanvas();
+      else paintTower(false);
+    }, delay);
   }
 
   window.addEventListener("resize", function () { scheduleRepaint(150); });
@@ -1798,6 +2397,7 @@
   paintOps();
   paintStreak();
   paintChest();
+  paintMode();
   paintTower(false);
   startRound();
 })();
