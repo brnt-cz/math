@@ -41,6 +41,28 @@ Pro pružné řady `minmax(0, 1fr)` + `min-height: 0` na dětech.
 `setPointerCapture` na odpojeném prvku spadl a tažení se přerušilo. Změna výběru
 má přepnout jen atribut, ne přestavět DOM.
 
+## U vlastního tažení vždy `preventDefault` a `user-select: none`
+
+Právě přemístěná kostka nešla přesunout znovu. Odposlech událostí ukázal, že po prvním
+tažení zůstal v prohlížeči výběr a druhé stisknutí nad ním spustilo **nativní HTML5
+tažení** (`dragstart`), které poslalo `pointercancel` a moje tažení zrušilo:
+
+    pointerdown → cell 5,5
+    pointermove → canvas
+    dragstart   → cell 5,5      ← nativní tažení
+    pointercancel → canvas      ← storno mého přesunu
+
+Vlastní tažení proto vždy: `e.preventDefault()` v `pointerdown`, `user-select: none`
+na tažené ploše a pojistka `dragstart → preventDefault`. Bez toho chyba vypadá jako
+„funguje to jen jednou“ a nedá se odhadnout ze kódu.
+
+## Odposlech událostí je rychlejší než domýšlení
+
+Na tuhle chybu jsem měl pět teorií (z-index, pointer capture, zbylý `skipClick`,
+překreslení DOM) a všechny byly mimo. Zjistil jsem to za minutu, když jsem na prvek
+navěsil posluchače všech relevantních událostí v capture fázi a přečetl si, co se
+skutečně děje.
+
 ## Playwright `dragTo` nemusí sehrát tažení jako prst
 
 Přesun kostky na paletu přes `dragTo` neproběhl, i když ruční sehrání

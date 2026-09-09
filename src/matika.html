@@ -539,6 +539,8 @@
      se čte prostorově. Rozteč řady je proto 0,75 × šířka kostky. */
   .canvas {
     position: relative;
+    user-select: none;
+    -webkit-user-select: none;
     width: calc(var(--cols-b) * var(--cell));
     height: calc((var(--rows-b) - 1) * var(--cell) * 0.75 + var(--cell));
     touch-action: none;
@@ -572,6 +574,8 @@
 
   .palette {
     flex: 0 0 auto;
+    user-select: none;
+    -webkit-user-select: none;
     display: flex;
     align-items: center;
     gap: .5rem;
@@ -1943,6 +1947,10 @@
     var key = cell.dataset.key;
     if (!build[key]) return;        // prázdné pole se plní klepnutím, ne tažením
 
+    // bez preventDefault by druhé stisknutí nad výběrem spustilo nativní tažení,
+    // které pošle pointercancel a náš přesun zruší
+    e.preventDefault();
+
     move = { from: key, type: build[key], moved: false, ghost: null };
     try { el.canvas.setPointerCapture(e.pointerId); } catch (err) { /* nevadí */ }
   });
@@ -2009,6 +2017,8 @@
   });
 
   el.canvas.addEventListener("pointercancel", function () { endMove(true); });
+
+  el.build.addEventListener("dragstart", function (e) { e.preventDefault(); });
 
   el.canvas.addEventListener("click", function (e) {
     if (skipClick) { skipClick = false; return; }

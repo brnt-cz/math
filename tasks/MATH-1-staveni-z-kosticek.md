@@ -152,7 +152,12 @@ Zbytek appky se nedotkne ničeho z vnitřností stavění.
    přepíná `aria-pressed` (`markPicked()`), paleta se překresluje až při změně počtů.
 2. `setPointerCapture` je navíc v `try/catch` — bez zachycení se tažení degraduje
    na klepání místo aby spadlo.
-3. **Chyba v mém testu, ne v kódu:** invariant jsem nejdřív počítal proti zásobě v truhle
+3. **Právě přemístěná kostka nešla přesunout znovu** (nahlášeno zadavatelem).
+   Po prvním tažení zůstal v prohlížeči výběr a druhé stisknutí nad ním spustilo nativní
+   HTML5 tažení, které poslalo `pointercancel` a přesun zrušilo. Chybělo
+   `e.preventDefault()` v `pointerdown`, `user-select: none` na ploše a paletě
+   a pojistka na `dragstart`. Ověřeno třemi skutečnými přesuny téže kostky za sebou.
+4. **Chyba v mém testu, ne v kódu:** invariant jsem nejdřív počítal proti zásobě v truhle
    místo proti celkovému počtu, takže kostky už ležící na ploše se počítaly dvakrát.
    Správný test je, že se součet `v truhle + na ploše` nemění.
 
