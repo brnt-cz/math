@@ -1,5 +1,5 @@
 /* Vygenerováno build.py — needituj tady. */
-var CACHE = "matika-ff541f7915";
+var CACHE = "matika-532fca8c9a";
 var ASSETS = ["./", "index.html", "manifest.json", "icon-192.png", "icon-512.png", "icon-maskable-512.png", "fonts/baloo-2-latin-ext.woff2", "fonts/baloo-2-latin.woff2", "fonts/lexend-latin-ext.woff2", "fonts/lexend-latin.woff2"];
 
 self.addEventListener("install", function (e) {
