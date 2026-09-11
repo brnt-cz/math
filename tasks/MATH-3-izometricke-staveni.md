@@ -67,6 +67,10 @@ políčko podlahy **přímo za** kostkou je celé zakryté její horní stěnou,
 nedá klepnout. Dozadu se staví po osách (políčka vlevo i vpravo za kostkou zůstávají
 z poloviny vidět) nebo od zadu dopředu.
 
+**Pravé tlačítko bourá** — sundá kostku, na kterou se kleplo, bez přepínání režimu
+(kontextové menu se potlačí). Na dotykových displejích pravé tlačítko není, proto
+režim „Bourat“ zůstává.
+
 Beze změny zůstává: tažení kostky jinam ji přesune, tažení na paletu ji vrátí do truhly,
 klepnutí s prázdnou rukou vezme druh kostky do ruky, režim „Bourat“ sundává.
 

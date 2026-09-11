@@ -262,6 +262,15 @@ function down(target: Cell | null, cube: Cell | null, e: PointerEvent): void {
   // které pošle pointercancel a náš přesun zruší
   e.preventDefault();
 
+  // pravé tlačítko bourá hned, i bez zapnutého bourání (na dotyku ho nahradí režim)
+  if (e.button === 2) {
+    cancel();
+    if (cube) emit("action", { kind: "take", cell: cube });
+    return;
+  }
+
+  if (e.button !== 0) return;
+
   const dragged = !props.wrecking && cube && props.build[cube] ? cube : null;
 
   press.value = {
@@ -427,6 +436,7 @@ onBeforeUnmount(() => {
         @pointerup="up"
         @pointercancel="cancel"
         @pointerleave="leave"
+        @contextmenu.prevent
         @dragstart.prevent
       >
         <div

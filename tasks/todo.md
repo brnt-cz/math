@@ -82,3 +82,4 @@ u `.page.building`.
 8. **Krumpáč jako kurzor** — překreslený na pixel art s obrysem, ať ladí s kostkami.
 9. **Nether portál** — obsidiánový rám (nejmíň 2 × 3) se pozná sám a vnitřek se zapálí
    fialovou plochou portálu. `lib/portal.ts` + 10 testů.
+10. **Pravé tlačítko bourá** — bez přepínání režimu; na dotyku zůstává režim „Bourat“.
