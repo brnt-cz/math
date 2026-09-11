@@ -71,3 +71,7 @@ u `.page.building`.
    a `(x−1, y−1, z)` se navíc kreslí na to samé místo, takže to ani nebylo poznat.
    Přidané zvýraznění kostky pod kurzorem a náhled cíle to prozradí předem.
 4. **Kurzor pro bourání** — krumpáč (SVG v `cursor`), špička hlavy je bod, kterým se míří.
+
+5. **Hlína pod kostkou** — tráva, na které něco stojí, se kreslí jako hlína; horní vrstva
+   zůstává travnatá. Je to jen vzhled (`spriteFor`), ne nový druh, takže rarita, zeď ani
+   truhla se nemění.

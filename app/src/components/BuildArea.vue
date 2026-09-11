@@ -8,7 +8,7 @@
      nativním tažením. -->
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
-import { BLOCKS, NAMES, type Block } from "../lib/blocks";
+import { BLOCKS, NAMES, spriteFor, type Block, type Sprite } from "../lib/blocks";
 import type { Counts } from "../lib/blocks";
 import {
   FACES,
@@ -155,7 +155,7 @@ type Side = { face: Face; target: Cell | null; style: Record<string, string> };
 
 /** Kostky v pořadí kreslení — vzestupně podle hloubky, protože směr pohledu je (1,1,1). */
 const blocks = computed(() => {
-  const out: { key: Cell; type: Block; zi: number; style: Record<string, string>; faces: Side[] }[] = [];
+  const out: { key: Cell; sprite: Sprite; zi: number; style: Record<string, string>; faces: Side[] }[] = [];
 
   for (const [key, type] of Object.entries(props.build)) {
     const v = parseVoxel(key);
@@ -163,10 +163,11 @@ const blocks = computed(() => {
 
     const { left, top } = boxAt(v, levels.value);
     const zi = 10 + depth(v) * 2;
+    const above = cellKey(v.x, v.y, v.z + 1);
 
     out.push({
       key,
-      type,
+      sprite: spriteFor(type, !!props.build[above]),
       zi,
       style: { ...frame(left, top), zIndex: String(zi) },
       faces: FACES.map((face) => {
@@ -390,7 +391,7 @@ onBeforeUnmount(() => observer?.disconnect());
 
         <template v-for="block in blocks" :key="block.key">
           <div class="blk" :style="block.style">
-            <BlockSprite :type="block.type" />
+            <BlockSprite :type="block.sprite" />
           </div>
 
           <div
@@ -399,7 +400,7 @@ onBeforeUnmount(() => observer?.disconnect());
             class="face"
             :class="{ on: hoverCube === block.key }"
             :data-cube="block.key"
-            :data-name="NAMES[block.type]"
+            :data-name="NAMES[block.sprite]"
             :data-target="side.target ?? undefined"
             :style="side.style"
             @pointerdown="down(side.target, block.key, $event)"

@@ -1,8 +1,8 @@
 <!-- Kostka: odkaz na SVG symbol z BlockDefs. Používá ji zeď, inventář i plocha. -->
 <script setup lang="ts">
-import type { Block } from "../lib/blocks";
+import type { Sprite } from "../lib/blocks";
 
-defineProps<{ type: Block }>();
+defineProps<{ type: Sprite }>();
 </script>
 
 <template>

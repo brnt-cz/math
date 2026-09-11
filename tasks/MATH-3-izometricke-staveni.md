@@ -81,6 +81,17 @@ a mezi kostkami nevznikaly světlé spáry.
 
 Kostka má na telefonu 20 px, na tabletu i desktopu 40 px.
 
+## Hlína pod kostkou
+
+Tráva, na které něco stojí, se kreslí jako **hlína** — jako v Minecraftu. Jakmile je
+nahoře volno (typicky u horní vrstvy stavby), je zase travnatá.
+
+Hlína **není druh kostky**: `BLOCKS` (a tím rarita, zeď i truhla) zůstávají beze změny,
+přidaný je jen vzhled (`SPRITES`, symbol `blk-dirt` složený z hliněných stěn trávy).
+Rozhoduje o tom čistá funkce `spriteFor(type, covered)`, takže se to dá otestovat bez
+prohlížeče. V truhle je to pořád blok trávy — počítání „v truhle + na ploše = nasbírané“
+se tím nedotkne.
+
 ## Uložená data
 
 Klíč buňky je `"x,y,z"`. Stavba ze staré ploché verze (`"x,y"`, kde `y` byla výška) se
@@ -89,7 +100,7 @@ nevejde, zůstane v truhle. Invariant „v truhle + na ploše = nasbírané“ p
 
 ## Ověřeno
 
-- 50 testů (`npm test`), z toho 9 nových na izometrii: projekce, hloubka, rozměr scény,
+- 54 testů (`npm test`), z toho 9 nových na izometrii: projekce, hloubka, rozměr scény,
   celistvost podlahy, tři stěny pokryjí kostku a nepřekrývají se.
 - V prohlížeči na 1280×900, 810×1080, 390×844 a 844×390: klepnutí na pravou i levou stěnu,
   na horní stěnu i na políčko podlahy trefilo pokaždé očekávanou buňku; přesun tažením

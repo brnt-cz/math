@@ -14,13 +14,27 @@ export const RARITY: Record<Block, number> = {
   obsidian: 5,
 };
 
-export const NAMES: Record<Block, string> = {
+/**
+ * Vzhledy kostek: druhy plus hlína. Hlína **není druh** — je to tráva, na které něco
+ * stojí. V truhle zůstává blokem trávy, takže se rarita ani počítání nemění.
+ */
+export const SPRITES = [...BLOCKS, "dirt"] as const;
+
+export type Sprite = (typeof SPRITES)[number];
+
+/** Tráva pod kostkou se zadupe na hlínu, jako v Minecraftu. */
+export function spriteFor(type: Block, covered: boolean): Sprite {
+  return type === "grass" && covered ? "dirt" : type;
+}
+
+export const NAMES: Record<Sprite, string> = {
   grass: "Blok trávy",
   stone: "Kámen",
   plank: "Dubová prkna",
   sand: "Písek",
   nether: "Netherrack",
   obsidian: "Obsidián",
+  dirt: "Hlína",
 };
 
 export const STACK = 64;
