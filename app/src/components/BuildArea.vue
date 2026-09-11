@@ -46,6 +46,10 @@ const props = defineProps<{
   picked: Block | null;
   wrecking: boolean;
   turn: Turn;
+  /** zbývající čas na stavění, „9:43“ */
+  clock: string;
+  /** poslední minuta — ať je vidět, že se to chýlí ke konci */
+  lowTime: boolean;
   sideLayout: boolean;
 }>();
 
@@ -522,6 +526,8 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="tools">
+        <span class="clock" :class="{ low: lowTime }" :title="`Zbývající čas na stavění: ${clock}`">{{ clock }}</span>
+
         <button
           type="button"
           class="wreck turn"

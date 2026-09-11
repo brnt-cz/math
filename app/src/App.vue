@@ -7,6 +7,7 @@ import { usePointerTip } from "./composables/usePointerTip";
 import { useSideLayout } from "./composables/useSideLayout";
 import { BANK_SIZE, CHEST_SLOTS } from "./lib/chest";
 import { usedSlots } from "./lib/blocks";
+import { TASKS_TO_EARN, clockText } from "./lib/allowance";
 import BlockDefs from "./components/BlockDefs.vue";
 import SetupPanel from "./components/SetupPanel.vue";
 import TaskSheet from "./components/TaskSheet.vue";
@@ -16,9 +17,12 @@ import RoundDone from "./components/RoundDone.vue";
 import BrickWall from "./components/BrickWall.vue";
 import ChestColumn from "./components/ChestColumn.vue";
 import BuildArea from "./components/BuildArea.vue";
+import { useBuildClock } from "./composables/useBuildClock";
 
 const game = useGame();
-const { state, chests, inStock, buildUnlocked, summary } = game;
+const { state, chests, inStock, buildUnlocked, buildReady, tasksToBuild, summary } = game;
+
+useBuildClock(game);
 
 const { sideLayout, pageWidth, page } = useSideLayout();
 const { tip, tipText, tipVisible } = usePointerTip();
@@ -41,7 +45,10 @@ const showChest = computed(() => state.banked >= BANK_SIZE);
 
 const modeLabel = computed(() => {
   if (state.building) return "Počítání";
-  if (buildUnlocked.value) return "Stavění";
+  if (buildReady.value) return "Stavění";
+
+  // vyčerpaný čas na stavění: ukazuje se, kolik příkladů ho zase odemkne
+  if (buildUnlocked.value) return `🔒 Stavění ${TASKS_TO_EARN - tasksToBuild.value}/${TASKS_TO_EARN}`;
 
   const first = chests.value[0];
   const used = first ? usedSlots(first.counts) : 0;
@@ -50,13 +57,14 @@ const modeLabel = computed(() => {
 
 const modeTip = computed(() => {
   if (state.building) return "Zpátky k příkladům";
-  if (buildUnlocked.value) return "Postav si něco z nasbíraných kostek";
+  if (buildReady.value) return "Postav si něco z nasbíraných kostek";
+  if (buildUnlocked.value) return `Ještě ${tasksToBuild.value} příkladů a můžeš zase stavět`;
   return "Stavění se otevře, až bude truhla plná";
 });
 
 function toggleMode(e: MouseEvent): void {
   if (e.detail > 0) (e.currentTarget as HTMLElement | null)?.blur();
-  if (!buildUnlocked.value) return;
+  if (!buildReady.value && !state.building) return;
 
   chestCol.value?.close();
   game.setMode(!state.building);
@@ -185,6 +193,8 @@ onBeforeUnmount(() => {
       :picked="state.picked"
       :wrecking="state.wrecking"
       :turn="state.turn"
+      :clock="clockText(state.allowance)"
+      :low-time="state.allowance.left <= 60"
       :side-layout="sideLayout"
       @action="game.buildAction"
       @rotate="game.rotate"

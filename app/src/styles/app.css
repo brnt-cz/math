@@ -677,6 +677,19 @@
 
   .wreck[aria-pressed="true"] { border-color: var(--bad); background: var(--bad); color: #FFFFFF; }
 
+  /* zbývající čas na stavění */
+  .clock {
+    flex: 0 0 auto;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: .9375rem;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    padding-right: .125rem;
+  }
+
+  .clock.low { color: var(--bad); }
+
   /* otáčení plochy: dvě tlačítka jen se symbolem */
   .wreck.turn {
     font-size: 1.125rem;

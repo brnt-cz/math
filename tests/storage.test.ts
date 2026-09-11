@@ -34,6 +34,7 @@ describe("uložený stav", () => {
       banked: 300,
       build: { "3,4,0": "grass", "4,4,1": "stone" },
       turn: 2,
+      allowance: { left: 420, solved: 0 },
     };
 
     const store = memory();
@@ -42,7 +43,7 @@ describe("uložený stav", () => {
 
     // a v úložišti je opravdu původní klíč a stejná pole
     expect(Object.keys(JSON.parse(store.data[KEY] as string)).sort()).toEqual(
-      ["banked", "best", "build", "ops", "range", "terms", "tower", "turn"],
+      ["banked", "best", "build", "buildLeft", "buildSolved", "ops", "range", "terms", "tower", "turn"],
     );
   });
 
@@ -56,6 +57,16 @@ describe("uložený stav", () => {
     expect(state.banked).toBe(3300);
     expect(state.best).toBe(12);
     expect(state.build).toEqual({ "5,2,0": "plank" });
+  });
+
+  it("zásoba času na stavění přežije zavření, stará data dostanou plnou", () => {
+    const store = memory(JSON.stringify({ banked: 300, buildLeft: 245, buildSolved: 7 }));
+    expect(load(store).allowance).toEqual({ left: 245, solved: 7 });
+
+    // syn po aktualizaci nesmí zůstat bez stavění
+    expect(load(memory(JSON.stringify({ banked: 300 }))).allowance).toEqual({ left: 600, solved: 0 });
+    // ale vyčerpaná zásoba se plnou stát nesmí
+    expect(load(memory(JSON.stringify({ buildLeft: 0, buildSolved: 12 }))).allowance).toEqual({ left: 0, solved: 12 });
   });
 
   it("otočení plochy přežije zavření, stará data ho neznají", () => {
