@@ -450,7 +450,6 @@ onBeforeUnmount(() => {
             class="face"
             :class="{ on: hoverCube === block.key }"
             :data-cube="block.key"
-            :data-name="NAMES[block.sprite]"
             :data-target="side.target ?? undefined"
             :style="side.style"
             @pointerdown="down(side.target, block.key, $event)"

@@ -56,7 +56,8 @@ Klepnutí se od tažení odděluje **osmipixelovou tolerancí** (`SLOP`): dokud 
 dál, jde o klepnutí a kostka, na kterou se kleplo, se nehýbe.
 
 Kostka pod kurzorem se celá zvýrazní (v režimu bourání červeně) a průhledný náhled ukáže,
-kam nová kostka spadne. Není to kosmetika: **patro výš vypadá v izometrii přesně stejně
+kam nová kostka spadne. Popisek s názvem kostky se na ploše **nezobrazuje** — při stavění
+ruší; zůstal jen tam, kde se kostky prohlížejí: v paletě, ve zdi a v truhle. Není to kosmetika: **patro výš vypadá v izometrii přesně stejně
 jako políčko dozadu** — `(x, y, z+1)` a `(x−1, y−1, z)` padnou na to samé místo, protože
 (1, 1, 1) je směr pohledu. Bez zvýraznění není poznat, jestli klepnutí staví nahoru, nebo
 na podlahu za kostkou; hlídá to i test.
