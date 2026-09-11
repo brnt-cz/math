@@ -76,6 +76,12 @@ Kostka je vycentrovaná na svůj šestiúhelník. **Maskovatelná ikona** má ko
 (352 px z 512): systém ji obřezává podle svého tvaru a zaručená je jen kružnice
 o průměru 80 % plátna, takže na větší kostku by kruhová maska seřízla horní vrchol.
 
+Kostka dubových prken ve hře je ta samá kresba — `plank()` z `cube.mjs`. Že se obě místa
+(SVG symbol v komponentě a generátor ikon) nerozešla, hlídá `tests/plank.test.ts`.
+
+Po změně ikony je potřeba appku na telefonu **odebrat a přidat znovu**. O obnovení ikony
+na ploše rozhoduje systém a Android si starou nechá, i když se manifest změní.
+
 Verze pro Claude Artifact (`artifact/matika.html`) je jeden soubor s inlinovaným JS
 a CSS, bez obálky `<html>/<head>/<body>` — a fonty si bere z Google CDN, protože
 fragment nemůže odkazovat na lokální soubory.
