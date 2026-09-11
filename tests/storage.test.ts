@@ -32,7 +32,7 @@ describe("uložený stav", () => {
       best: 9,
       tower: 17,
       banked: 300,
-      build: { "3,11": "grass", "4,11": "stone" },
+      build: { "3,4,0": "grass", "4,4,1": "stone" },
     };
 
     const store = memory();
@@ -47,14 +47,14 @@ describe("uložený stav", () => {
 
   it("syn nepřijde o zeď, truhly ani stavbu", () => {
     const store = memory(
-      JSON.stringify({ range: 20, terms: 3, ops: { add: true, sub: true, mul: false, div: false }, best: 12, tower: 23, banked: 3300, build: { "5,11": "plank" } }),
+      JSON.stringify({ range: 20, terms: 3, ops: { add: true, sub: true, mul: false, div: false }, best: 12, tower: 23, banked: 3300, build: { "5,2,0": "plank" } }),
     );
     const state = load(store);
 
     expect(state.tower).toBe(23);
     expect(state.banked).toBe(3300);
     expect(state.best).toBe(12);
-    expect(state.build).toEqual({ "5,11": "plank" });
+    expect(state.build).toEqual({ "5,2,0": "plank" });
   });
 
   it("rozumí starému formátu znamének jako textu", () => {

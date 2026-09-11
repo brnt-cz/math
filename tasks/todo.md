@@ -1,152 +1,61 @@
-# Matika do dvaceti — trénování počítání
+# MATH-3: Izometrické stavění
 
-Statická jednostránková appka, jeden soubor `index.html` (bez buildu, bez závislostí kromě Google Fonts).
-Nasazeno na RPi jako `/www/matika` → symlink `/var/www/html/matika` → https://brnt.cz/matika
+Stavění z MATH-1 kreslí kostky do jedné svislé vrstvy (zeď zpředu). Cílem je skutečná
+izometrie: kosočtverečná podlaha, hloubka i výška.
 
-## Hotovo
+## Geometrie
 
-- [x] Rozsah do 10 / do 20, 2–4 čísla v příkladu
-- [x] Znaménka jako zaškrtávátka: `+`, `−`, `×`, `÷` — libovolná kombinace, aspoň jedno musí zůstat
-- [x] Priorita operací: `× ÷` se počítá před `+ −` (příklad je matematicky správný i pro cizí návštěvníky)
-- [x] Mezivýsledky vždy celé číslo v rozsahu 1–max (žádné minus, žádné přetečení, dělení beze zbytku)
-- [x] V rozsahu do 20 převážně příklady přes desítku (~85–100 %), pod deseti jen každý pátý
-- [x] Výsledek se píše velkými tlačítky nebo fyzickou klávesnicí (číslice, Backspace, Enter).
-      Rámeček na výsledek **není `<input>`** — na mobilu/tabletu by při každém focusu
-      vyskočila systémová klávesnice a posunula obrazovku. Číslice zapisujeme sami,
-      posluchač visí na `document`, takže focus není potřeba vůbec.
-- [x] Po kliknutí ukazatelem se ovládací prvek odostří (`e.detail > 0`), aby zaostřené
-      tlačítko nepolykalo mezerník
-- [x] Minecraftová věž: správný výsledek = kostka nahoru, chyba = poslední kostka spadne
-- [x] Kostky jako izometrické SVG kubusy (drn / kámen / dubová prkna), bez podlahy, odsazené od sešitu
-- [x] Zeď: sloupec se plní odspodu, po dosažení vrcholu stránky začne nový sloupec vedle;
-      počet pater se počítá z reálné výšky stránky (přepočet i při změně velikosti okna)
-- [x] Když je zeď plná, kostky se zmenší (`--zoom`) — žádná nikdy nezmizí
-- [x] Zmenšování skokem (×0,78) s hysterezí, ne plynule — zeď se nepřerovnává s každou kostkou
-- [x] 6 druhů kostek (drn, kámen, prkna, písek, netherrack, obsidián), typ = hash indexu,
-      takže rozházené, ale po překreslení stejné
-- [x] Výška výpočtového sloupce se zafixuje — po dokončení kola zeď zůstane pixel za pixel stejná
-- [x] Dělení sebou samým (x÷x) jen když jinak příklad nelze sestavit (dvoufázový generátor)
-- [x] Truhla: každých 50 kostek se zeď uloží do truhly (vlastní sloupec vpravo, stojí na stejné
-      zemi jako zeď); po 100 je z ní velká truhla. Co je v truhle, chyba už nesundá.
-- [x] Kostky se sypou do truhel po řadě; další truhla se přistaví (zarovnaná zleva, sedí na víku
-      té spodní) teprve když je předchozí úplně plná — 54 políček, tj. 3250 kostek
-- [x] Rozvržení podle orientace: na výšku má hra celou šířku a zeď s truhlami jsou v pásu
-      pod klávesnicí (telefon 30 px kostky, tablet 40 px), na šířku svislý pruh vpravo.
-      Příklady mají prioritu, gamifikace je vedlejší.
-- [x] Na šířku se celá appka vejde do okna bez posuvníku (`100svh` + pružný sešit
-      a klávesnice, velikost písma tlačítek z `cqh`); na nízkém okně kompaktní nastavení
-- [x] Zrušeno fixování výšky sloupce (`lockWrapHeight`) — výšku teď drží rozvržení samo
-- [x] PWA není zamčená na výšku — v manifestu není `orientation`, jde tedy oboje
-- [x] Inventář na kliknutí (hover se ukázal jako nepříjemný): minecraftová mřížka 3 × 9 nebo 6 × 9,
-      kostky stackované po druzích, max 64 na políčko. Vyskočí nad truhlu.
-- [x] Dvojtruhla je jeden kus — jedno kování, uprostřed žádná hrana
-- [x] Minecraftovský tooltip s názvem kostky (Blok trávy, Kámen, Dubová prkna, Písek,
-      Netherrack, Obsidián) na zdi i na políčkách v truhle
-- [x] Vážená vzácnost kostek (drn 27 %, kámen 24, prkna 20, písek 15, netherrack 9, obsidián 5)
-- [x] Favicon = dřevěná kostka (generuje `build.py` jako inline SVG)
-- [x] V hlavičce aktuální i nejlepší série, v souhrnu kola nejdelší řada za sebou
-- [x] Po chybě příklad zůstává, dokud ho syn nedopočítá; po 3 omylech nápověda a věž se dál nebourá
-- [x] Série 10 příkladů + hvězdičky, nejdelší série napoprvé
-- [x] localStorage: nastavení, nejdelší série, výška věže (drží i po zavření stránky)
-- [x] Příklad vždy na jednom řádku — velikost fontu z šířky sešitu (`cqw`) a počtu čísel
-- [x] Pevný červený okraj sešitu, text do něj nezasahuje
-- [x] Responzivní 320 px → desktop, jen světlé téma, zvukové blipnutí
+SVG symboly kostek **už izometrické kostky jsou** — `viewBox 0 0 32 32`, tři stěny
+přes `matrix(1,.5,-1,.5,16,0)` (horní), `matrix(1,.5,0,1,0,8)` (levá) a
+`matrix(1,-.5,0,1,16,16)` (pravá). Hrana kostky je 16 jednotek, obal je čtverec 32×32.
+Grafika se tedy nemění vůbec, mění se jen rozmístění:
 
-## PWA
+    obal kostky (x, y, z):  left = (x − y + DEPTH − 1) · s/2
+                            top  = (x + y) · s/4 − z · s/2 + (LEVELS − 1) · s/2
 
-- [x] `manifest.json` (standalone, ikony 192/512 + maskable, portrait)
-- [x] `sw.js` — precache celé appky, jméno cache = hash `index.html` (samo se obnoví)
-- [x] Fonty hostované lokálně (`fonts/*.woff2`, latin + latin-ext) — offline nic nechybí
-      a nejde žádný požadavek na cizí server
-- [x] Blikající kurzor v rámečku: prázdný = před otazníkem, s číslem = za ním,
-      výška i střed podle číslic (naměřeno: číslice sahají −0,022em..0,63em)
+Směr pohledu je (1,1,1) — dva body splynou, právě když se liší o násobek (1,1,1).
+Větší `x + y + z` je proto blíž k divákovi: **kreslit vzestupně podle součtu**.
 
-## Lekce
+## Plán
 
-- **`grid-auto-rows: 1fr` je `minmax(auto, 1fr)`** — řady se nesmí zmenšit pod obsah,
-  takže mřížka klávesnice vytekla z rámce a překryla puntíky. Správně `minmax(0, 1fr)`
-  plus `min-height: 0` a `line-height: 1` na tlačítkách.
-- **Media query nezvyšuje specificitu.** Bloky pro rozvržení musí být v souboru
-  za základními styly komponent, jinak je komponenty přebijí (narazil jsem na to dvakrát:
-  u `.page:not(.has-chest)` a u rozvržení na šířku).
-- **Při testování pozor na service worker** — v prohlížeči servíroval starou stránku
-  a měřil jsem neexistující chybu. Před měřením ho odregistrovat a vyhodit cache.
+- [x] Založit task MATH-3 v TODOcku a větev
+- [x] `lib/iso.ts` — čisté funkce: klíč buňky, projekce, hloubka, rozměr scény, stěny
+- [x] `lib/inventory.ts` — buňky 3D, převod staré ploché stavby
+- [x] Testy na `iso.ts` a doplnit testy inventáře
+- [x] `BuildArea.vue` — podlaha, kostky podle hloubky, terče na stěnách, tažení
+- [x] CSS pro scénu
+- [x] Ověřit v prohlížeči na telefonu, tabletu i desktopu + přesnost klepnutí
+- [x] `npm test`, `npm run build`, PR
 
-## Tasky v TODOcku
+## Ovládání
 
-Zadání pro tento projekt vznikají v TODOcku (projekt `MATH`), větev se jmenuje podle kódu tasku.
+Terč pro prst je **samotná stěna**: kosočtverec pro horní, kosodélníky pro boční.
+Co je vidět, na to se dá klepnout — a naopak, co kostka zakryje, patří jí.
 
-- **MATH-1 — Stavění z kostiček** → [tasks/MATH-1-staveni-z-kosticek.md](MATH-1-staveni-z-kosticek.md)
-- **MATH-2 — Refactor do Vue 3** (backlog)
+| klepnutí | akce |
+| --- | --- |
+| podlaha | kostka na zem `(x, y, 0)` |
+| horní stěna | kostka nad ni `(x, y, z+1)` |
+| pravá stěna | kostka před ni `(x+1, y, z)` |
+| levá stěna | kostka před ni `(x, y+1, z)` |
 
-## Review
+Boční stěny umí převisy a oblouky, takže se nemusí hlídat podpora zespodu — nová
+kostka vždy na něčem navazuje. Kostka se dá sebrat i zpod stavby, stejně jako
+v Minecraftu.
 
-- **Generátor ověřen programově:** 36 000 příkladů přes všechny kombinace rozsahu (10/20),
-  počtu čísel (2/3/4) a všech 15 neprázdných množin znamének. Kontrolováno proti referenčnímu
-  vyhodnocení s prioritou operací: 0 chyb — nikde necelé dělení, nikde mezivýsledek mimo rozsah,
-  nikde nepovolené znaménko. 8 844 příkladů míchalo `+ −` s `× ÷`, priorita vždy souhlasila.
-- **Struktura příkladu:** skládá se z bloků. Blok je jedno číslo nebo řetězec `× ÷`; bloky se
-  pak sčítají a odčítají. Díky tomu je priorita zaručena konstrukcí, ne dodatečným parsováním.
-- **Nalezená a opravená chyba:** Enter se zpracovával dvakrát (listener na inputu i na dokumentu),
-  takže po první chybě naskočilo „Napiš výsledek“ místo „Ještě jednou“. Obsluha klávesnice je teď
-  na jednom místě (`document` keydown).
-- **Ověřeno v prohlížeči:** správná odpověď přidá kostku a posune sérii, chybná kostku sundá,
-  příklad zůstává na místě, hodnoty přežijí reload. Nejhorší reálný čtyřčlenný příklad má na
-  320 px ještě rezervu, stránka nikde nescrolluje do strany.
-- **Stabilita zdi ověřena:** při rostoucí zdi 1 → 70 kostek na 1440×900 se rozvržení mění
-  jen 6×: nový sloupec při 15, 29, 39, 58 a zmenšení kostky při 37 (64→50 px) a 67 (50→39 px).
-  Mezi tím se žádná existující kostka nepohne. Po dokončení kola: 0 rozdílů na 66 kostkách.
-- **Ověřeno pro zeď:** 1 / 10 / 14 / 23 / 40 / 80 / 200 kostek na 430×880 — vždy se nakreslí
-  všechny, sloupců 1 → 6, pruh se šířkou zastaví na 32 % stránky, nic nepřeteče nad ani vpravo,
-  sešit se nikdy nezalomí. Pod 13 px se kostka už nezmenšuje.
-- **Pozor na záměnu:** „9 z 10 napoprvé" je počet za kolo, „nejdelší série" je nejdelší
-  nepřerušená řada — proto může být menší. Kvůli tomu je teď v hlavičce vidět i aktuální série.
-- **Past na `<use>` + viewBox:** symbol se záporným počátkem viewBoxu (`0 -8 …`) se odřízne,
-  protože `<use>` vytvoří viewport od (0,0). Sprity truhly proto mají viewBox od nuly a obsah
-  posunutý dovnitř `<g transform="translate(…)">`. Narazil jsem na to dvakrát — u dvojtruhly
-  a pak u černého obtažení.
-- **Kotvení inventáře:** `bottom: 100%` na sloupci truhly ho vystřelilo mimo obrazovku (sloupec
-  je vysoký jako zeď). Truhla je proto v obalu `.chest-mount` velikosti spritu.
-- **Regrese z mobilního rozvržení:** `.page:not(.has-chest)` má specificitu dvou tříd
-  a media query specificitu nezvyšuje, takže mobilní jednosloupcové pravidlo přebíjelo
-  desktopový přepis — bez truhly spadly kostičky pod hru i na desktopu. Přepis v media
-  query má teď stejnou specificitu; proměřeno 1280/768/520/430/390 px se truhlou i bez ní.
-- **Vědomé rozhodnutí:** po 3 omylech se ukáže výsledek jako nápověda a věž se přestane bourat —
-  jinak by šel příklad, který syn neumí, bourat do nuly.
+## Výsledek
 
-## Ověřeno bez posuvníku
+Hotovo, podrobně v `tasks/MATH-3-izometricke-staveni.md`.
 
-Na šířku (obsah × okno, s truhlou i bez): iPad 11" 1080×810, iPad mini 1024×744,
-iPad s lištou 1080×700, notebook 1366×768, desktop 1280×900, Full HD 1920×1080,
-nízké okno 1000×500, telefon na šířku 844×390 i 667×375 — **nikde posuvník**.
-Klávesnice se přizpůsobí: tlačítko 39 px na telefonu na šířku, 62 px na iPadu,
-125 px na Full HD.
+- `lib/iso.ts` — projekce, hloubka, rozměr scény a matice stěn jako čisté funkce, 8 testů.
+- Mřížka 8 × 8 × 8, klíč buňky `"x,y,z"`, stará plochá stavba se převede.
+- Kostka má na telefonu 40 px místo 21 px, na tabletu a desktopu 80 px.
+- Ověřeno v prohlížeči na 1280×900, 810×1080, 390×844 a 844×390 (dev i produkční build):
+  klepnutí trefilo pokaždé očekávanou buňku, tažení i opakovaný přesun fungují,
+  počítání a zeď beze změny, v konzoli nic.
 
-Na výšku: tablety (744×1133, 810×1080) bez posuvníku; telefony mají celou hru
-do 700 px (na iPhonu 14 i Pixelu 7 je vidět bez scrollování) a pás s kostkami
-je pod ohybem.
+### Co stojí za zaznamenání
 
-## Ověřeno offline
-
-- Po první návštěvě má service worker v cache 10 položek (stránka, manifest, 3 ikony,
-  4 fonty, `./`). S vypnutým serverem se stránka načte, fonty jsou k dispozici
-  (`document.fonts.check` → true), příklad se dá vyřešit a kostka přiroste.
-- Ověřeno i na živé adrese https://brnt.cz/matika — cache `matika-<hash>`, 10 položek.
-
-## Sestavení a nasazení
-
-`index.html` se sestavuje ze fragmentu (verze pro Artifact, bez `<html>/<head>/<body>`):
-
-```bash
-python3 build.py cesta/k/matika.html   # dolepí <head> vč. favicony
-scp index.html pi:/www/matika/index.html
-```
-
-## Ověřeno u truhly
-
-- Obsah truhly pro 0 / 50 / 100 / 150 / 400 kostek: součet políček vždy odpovídá,
-  nikde víc než 64 na políčku, stacky se správně lámou (400 → grass 64+57, …).
-- Truhla se objeví až od 50, dvojtruhla od 100 (27 → 54 políček).
-- Šířky 320 / 430 / 768: dno truhly je na stejné úrovni jako dno zdi, inventář nikdy
-  nepřekrývá zeď ani nevyleze z okna, sešit ani stránka se nezalomí do strany.
-- Přechody 49 → 50 (zeď do truhly) a 99 → 100 (velká truhla) včetně hlášky a uložení.
+Přebytečnou výšku dostávaly v mřížce **všechny** řádky `auto`, ne jen ta s plochou —
+hlavička se roztáhla a plocha zůstala malá. Řeší to `grid-template-rows: auto minmax(0, 1fr)`
+u `.page.building`.

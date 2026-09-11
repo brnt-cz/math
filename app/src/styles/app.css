@@ -520,12 +520,13 @@
     gap: .75rem;
   }
 
+  /* Rám obalí scénu; volné místo zůstává nad podlahou, tam stavba roste. */
   .canvas-wrap {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-height: 0;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -534,43 +535,47 @@
     overflow: hidden;
   }
 
-  /* Kostky se kladou do jedné vrstvy, ale kreslí se jako stoh: řady se překrývají
-     o čtvrtinu kostky (stejně jako zeď), takže mezi nimi nejsou mezery a stavba
-     se čte prostorově. Rozteč řady je proto 0,75 × šířka kostky. */
+  /* Izometrická scéna. Podlaha je kosočtverečná mřížka, kostky se kladou do hloubky
+     i do výšky a kreslí se vzestupně podle hloubky x+y+z. Stěny kostky slouží zároveň
+     jako terče pro prst — proto je každá zkosený čtverec se `transform-origin: 0 0`,
+     pro který matici počítá `lib/iso.ts`. Rozměry i pozice dává komponenta inline,
+     protože je odvozuje z velikosti kostky. */
   .canvas {
     position: relative;
     user-select: none;
     -webkit-user-select: none;
-    width: calc(var(--cols-b) * var(--cell));
-    height: calc((var(--rows-b) - 1) * var(--cell) * 0.75 + var(--cell));
     touch-action: none;
   }
 
-  /* terč pro prst: výška = rozteč řady, takže se terče nepřekrývají */
-  .cell {
-    position: absolute;
-    left: calc(var(--c) * var(--cell));
-    bottom: calc(var(--r) * var(--cell) * 0.75);
-    width: var(--cell);
-    height: calc(var(--cell) * 0.75);
+  .tile,
+  .face,
+  .blk,
+  .ghost { position: absolute; }
+
+  .tile,
+  .face { transform-origin: 0 0; }
+
+  /* podlaha: zkosený čtverec je kosočtverec, takže i terč má tvar políčka */
+  .tile {
     z-index: 1;
-    box-shadow: inset -1px -1px 0 var(--line);
+    background: #E7EDF5;
+    box-shadow: inset 0 0 0 1px var(--line);
   }
 
-  .cell.hint { background: var(--accent-soft); }
+  .tile.alt { background: #DEE6F1; }
 
-  /* kostka je čtvercová a přečnívá nad svůj terč — vyšší řada kreslí přes spodní */
-  .blk {
-    position: absolute;
-    left: calc(var(--c) * var(--cell));
-    bottom: calc(var(--r) * var(--cell) * 0.75);
-    width: var(--cell);
-    height: var(--cell);
-    z-index: calc(2 + var(--r));
-    pointer-events: none;
-  }
-
+  /* kostka se nekreslí do terče: stěny nad ní chytají prst přesně podle toho,
+     co je vidět (zakrytá políčka podlahy tím patří kostce, která je zakrývá) */
+  .blk { pointer-events: none; }
   .blk svg { display: block; width: 100%; height: 100%; }
+
+  /* náhled místa, kam kostka spadne */
+  .ghost {
+    pointer-events: none;
+    opacity: .4;
+  }
+
+  .ghost svg { display: block; width: 100%; height: 100%; }
 
   .palette {
     flex: 0 0 auto;
@@ -969,6 +974,8 @@
   .page.building {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "head" "main";
+    /* volnou výšku dostane plocha, ne hlavička */
+    grid-template-rows: auto minmax(0, 1fr);
     min-height: 100svh;
   }
 
