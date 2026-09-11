@@ -1,26 +1,52 @@
 /** Druhy kostek: vzhled, názvy a vážená vzácnost. */
 
-export const BLOCKS = ["grass", "stone", "plank", "sand", "nether", "obsidian"] as const;
+export const BLOCKS = ["grass", "stone", "cobble", "plank", "log", "sand", "nether", "obsidian"] as const;
 
 export type Block = (typeof BLOCKS)[number];
 
-/** Šance v procentech, od nejběžnějšího po nejvzácnější. Součet je 100. */
+/**
+ * Šance v procentech, od nejběžnějšího po nejvzácnější. Součet je 100.
+ *
+ * Nové druhy si vždycky vezmou díl **od svého příbuzného** a stojí v seznamu hned za ním:
+ * kláda z prken (20 → 12 + 8), dlažební kostka z kamene (24 → 14 + 10). Součty přes
+ * ostatní druhy tím zůstanou stejné, takže se už nasbíraným kostkám druh nemění — jen
+ * z části prken jsou klády a z části kamene dlažba. Jinak by se synovi přeházela
+ * celá truhla i zeď.
+ */
 export const RARITY: Record<Block, number> = {
   grass: 27,
-  stone: 24,
-  plank: 20,
+  stone: 14,
+  cobble: 10,
+  plank: 12,
+  log: 8,
   sand: 15,
   nether: 9,
   obsidian: 5,
 };
 
-export const NAMES: Record<Block, string> = {
+/**
+ * Vzhledy kostek: druhy plus hlína. Hlína **není druh** — je to tráva, na které něco
+ * stojí. V truhle zůstává blokem trávy, takže se rarita ani počítání nemění.
+ */
+export const SPRITES = [...BLOCKS, "dirt"] as const;
+
+export type Sprite = (typeof SPRITES)[number];
+
+/** Tráva pod kostkou se zadupe na hlínu, jako v Minecraftu. */
+export function spriteFor(type: Block, covered: boolean): Sprite {
+  return type === "grass" && covered ? "dirt" : type;
+}
+
+export const NAMES: Record<Sprite, string> = {
   grass: "Blok trávy",
   stone: "Kámen",
+  cobble: "Dlažební kostka",
   plank: "Dubová prkna",
+  log: "Dubová kláda",
   sand: "Písek",
   nether: "Netherrack",
   obsidian: "Obsidián",
+  dirt: "Hlína",
 };
 
 export const STACK = 64;

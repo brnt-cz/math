@@ -520,12 +520,13 @@
     gap: .75rem;
   }
 
+  /* Rám obalí scénu; volné místo zůstává nad podlahou, tam stavba roste. */
   .canvas-wrap {
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-height: 0;
     display: flex;
     justify-content: center;
-    align-items: center;
+    align-items: flex-end;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 14px;
@@ -534,48 +535,92 @@
     overflow: hidden;
   }
 
-  /* Kostky se kladou do jedné vrstvy, ale kreslí se jako stoh: řady se překrývají
-     o čtvrtinu kostky (stejně jako zeď), takže mezi nimi nejsou mezery a stavba
-     se čte prostorově. Rozteč řady je proto 0,75 × šířka kostky. */
+  /* Izometrická scéna. Podlaha je kosočtverečná mřížka, kostky se kladou do hloubky
+     i do výšky a kreslí se vzestupně podle hloubky x+y+z. Stěny kostky slouží zároveň
+     jako terče pro prst — proto je každá zkosený čtverec se `transform-origin: 0 0`,
+     pro který matici počítá `lib/iso.ts`. Rozměry i pozice dává komponenta inline,
+     protože je odvozuje z velikosti kostky. */
   .canvas {
     position: relative;
     user-select: none;
     -webkit-user-select: none;
-    width: calc(var(--cols-b) * var(--cell));
-    height: calc((var(--rows-b) - 1) * var(--cell) * 0.75 + var(--cell));
     touch-action: none;
   }
 
-  /* terč pro prst: výška = rozteč řady, takže se terče nepřekrývají */
-  .cell {
-    position: absolute;
-    left: calc(var(--c) * var(--cell));
-    bottom: calc(var(--r) * var(--cell) * 0.75);
-    width: var(--cell);
-    height: calc(var(--cell) * 0.75);
+  .tile,
+  .face,
+  .blk,
+  .portal,
+  .ghost { position: absolute; }
+
+  .tile,
+  .face { transform-origin: 0 0; }
+
+  /* podlaha: zkosený čtverec je kosočtverec, takže i terč má tvar políčka */
+  .tile {
     z-index: 1;
-    box-shadow: inset -1px -1px 0 var(--line);
+    background: #E7EDF5;
+    box-shadow: inset 0 0 0 1px var(--line);
   }
 
-  .cell.hint { background: var(--accent-soft); }
+  .tile.alt { background: #DEE6F1; }
 
-  /* kostka je čtvercová a přečnívá nad svůj terč — vyšší řada kreslí přes spodní */
-  .blk {
-    position: absolute;
-    left: calc(var(--c) * var(--cell));
-    bottom: calc(var(--r) * var(--cell) * 0.75);
-    width: var(--cell);
-    height: var(--cell);
-    z-index: calc(2 + var(--r));
+  /* kostka se nekreslí do terče: stěny nad ní chytají prst přesně podle toho,
+     co je vidět (zakrytá políčka podlahy tím patří kostce, která je zakrývá) */
+  .blk { pointer-events: none; }
+  .blk svg { display: block; width: 100%; height: 100%; }
+
+  /* V režimu bourání je kurzorem krumpáč, ať je poznat, co klepnutí udělá. Je to
+     pixel art jako kostky (mřížka 16 × 16, celý v obrysu, ať je čitelný na světlém
+     i tmavém), míří se špičkou levého hrotu. */
+  .canvas.wrecking {
+    cursor: url("data:image/svg+xml;charset=utf8,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 16 16' shape-rendering='crispEdges'><rect x='4' y='0' width='7' height='1' fill='%232F2A26'/><rect x='2' y='1' width='2' height='1' fill='%232F2A26'/><rect x='4' y='1' width='7' height='1' fill='%23C4C4C4'/><rect x='11' y='1' width='2' height='1' fill='%232F2A26'/><rect x='1' y='2' width='1' height='1' fill='%232F2A26'/><rect x='2' y='2' width='2' height='1' fill='%23C4C4C4'/><rect x='4' y='2' width='7' height='1' fill='%239A9A9A'/><rect x='11' y='2' width='2' height='1' fill='%23C4C4C4'/><rect x='13' y='2' width='1' height='1' fill='%232F2A26'/><rect x='0' y='3' width='1' height='1' fill='%232F2A26'/><rect x='1' y='3' width='2' height='1' fill='%239A9A9A'/><rect x='3' y='3' width='1' height='1' fill='%236B6B6B'/><rect x='4' y='3' width='1' height='1' fill='%232F2A26'/><rect x='5' y='3' width='1' height='1' fill='%23A07A55'/><rect x='6' y='3' width='2' height='1' fill='%237A5639'/><rect x='8' y='3' width='3' height='1' fill='%232F2A26'/><rect x='11' y='3' width='1' height='1' fill='%236B6B6B'/><rect x='12' y='3' width='2' height='1' fill='%239A9A9A'/><rect x='14' y='3' width='1' height='1' fill='%232F2A26'/><rect x='0' y='4' width='1' height='1' fill='%232F2A26'/><rect x='1' y='4' width='1' height='1' fill='%239A9A9A'/><rect x='2' y='4' width='1' height='1' fill='%236B6B6B'/><rect x='3' y='4' width='2' height='1' fill='%232F2A26'/><rect x='5' y='4' width='1' height='1' fill='%23A07A55'/><rect x='6' y='4' width='2' height='1' fill='%237A5639'/><rect x='8' y='4' width='1' height='1' fill='%232F2A26'/><rect x='11' y='4' width='1' height='1' fill='%232F2A26'/><rect x='12' y='4' width='1' height='1' fill='%236B6B6B'/><rect x='13' y='4' width='1' height='1' fill='%239A9A9A'/><rect x='14' y='4' width='1' height='1' fill='%232F2A26'/><rect x='1' y='5' width='2' height='1' fill='%232F2A26'/><rect x='5' y='5' width='1' height='1' fill='%232F2A26'/><rect x='6' y='5' width='1' height='1' fill='%23A07A55'/><rect x='7' y='5' width='2' height='1' fill='%237A5639'/><rect x='9' y='5' width='1' height='1' fill='%232F2A26'/><rect x='12' y='5' width='2' height='1' fill='%232F2A26'/><rect x='5' y='6' width='1' height='1' fill='%232F2A26'/><rect x='6' y='6' width='1' height='1' fill='%23A07A55'/><rect x='7' y='6' width='2' height='1' fill='%237A5639'/><rect x='9' y='6' width='1' height='1' fill='%232F2A26'/><rect x='6' y='7' width='1' height='1' fill='%232F2A26'/><rect x='7' y='7' width='1' height='1' fill='%23A07A55'/><rect x='8' y='7' width='2' height='1' fill='%237A5639'/><rect x='10' y='7' width='1' height='1' fill='%232F2A26'/><rect x='6' y='8' width='1' height='1' fill='%232F2A26'/><rect x='7' y='8' width='1' height='1' fill='%23A07A55'/><rect x='8' y='8' width='2' height='1' fill='%237A5639'/><rect x='10' y='8' width='1' height='1' fill='%232F2A26'/><rect x='7' y='9' width='1' height='1' fill='%232F2A26'/><rect x='8' y='9' width='1' height='1' fill='%23A07A55'/><rect x='9' y='9' width='2' height='1' fill='%237A5639'/><rect x='11' y='9' width='1' height='1' fill='%232F2A26'/><rect x='7' y='10' width='1' height='1' fill='%232F2A26'/><rect x='8' y='10' width='1' height='1' fill='%23A07A55'/><rect x='9' y='10' width='2' height='1' fill='%237A5639'/><rect x='11' y='10' width='1' height='1' fill='%232F2A26'/><rect x='8' y='11' width='1' height='1' fill='%232F2A26'/><rect x='9' y='11' width='1' height='1' fill='%23A07A55'/><rect x='10' y='11' width='2' height='1' fill='%237A5639'/><rect x='12' y='11' width='1' height='1' fill='%232F2A26'/><rect x='8' y='12' width='1' height='1' fill='%232F2A26'/><rect x='9' y='12' width='1' height='1' fill='%23A07A55'/><rect x='10' y='12' width='2' height='1' fill='%237A5639'/><rect x='12' y='12' width='1' height='1' fill='%232F2A26'/><rect x='9' y='13' width='1' height='1' fill='%232F2A26'/><rect x='10' y='13' width='1' height='1' fill='%23A07A55'/><rect x='11' y='13' width='2' height='1' fill='%237A5639'/><rect x='13' y='13' width='1' height='1' fill='%232F2A26'/><rect x='10' y='14' width='3' height='1' fill='%232F2A26'/></svg>") 2 8, crosshair;
+  }
+
+  /* kostka pod kurzorem se zvýrazní celá — v izometrii se jinak nedá poznat,
+     jestli mířím na kostku, nebo na podlahu za ní */
+  .face.on { background: rgba(255, 255, 255, .3); }
+  .canvas.wrecking .face.on { background: rgba(220, 74, 61, .45); }
+
+  /* Plocha nether portálu: leží v rovině obsidiánového rámu, takže se kreslí stejnou
+     maticí jako stěna kostky. Rám se pozná sám, viz lib/portal.ts. */
+  .portal {
+    transform-origin: 0 0;
     pointer-events: none;
   }
 
-  .blk svg { display: block; width: 100%; height: 100%; }
+  .portal svg { display: block; width: 100%; height: 100%; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .portal { animation: portal 2.4s ease-in-out infinite alternate; }
+  }
+
+  @keyframes portal {
+    from { opacity: .8; }
+    to { opacity: 1; }
+  }
+
+  /* náhled místa, kam kostka spadne */
+  .ghost {
+    pointer-events: none;
+    opacity: .4;
+  }
+
+  .ghost svg { display: block; width: 100%; height: 100%; }
 
   .palette {
     flex: 0 0 auto;
     user-select: none;
     -webkit-user-select: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  /* Bourat a Zbourat vše drží pohromadě a na úzkém displeji se zalomí jako celek. */
+  .tools {
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: .5rem;
@@ -631,6 +676,10 @@
   }
 
   .wreck[aria-pressed="true"] { border-color: var(--bad); background: var(--bad); color: #FFFFFF; }
+
+  /* Zbourat vše je druhořadé, ať se do něj nepraští omylem */
+  .wreck.clear { font-size: .8125rem; padding: .4375rem .625rem; }
+  .wreck.clear:disabled { opacity: .4; cursor: default; }
   .wreck:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
 
   /* kostka tažená prstem/myší */
@@ -969,6 +1018,8 @@
   .page.building {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas: "head" "main";
+    /* volnou výšku dostane plocha, ne hlavička */
+    grid-template-rows: auto minmax(0, 1fr);
     min-height: 100svh;
   }
 

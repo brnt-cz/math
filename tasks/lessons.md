@@ -91,3 +91,16 @@ skutečně děje.
 Přesun kostky na paletu přes `dragTo` neproběhl, i když ruční sehrání
 `pointerdown → pointermove → pointerup` na stejných souřadnicích fungovalo.
 Když `dragTo` selže, ověřit ručně sehranou sekvencí, než začnu hledat chybu v kódu.
+
+## Volná výška v gridu se rozdá všem řádkům `auto`
+
+V režimu stavění byla stránka `min-height: 100svh` a řádky `auto`. Přebytečná výška se
+rozdělila i do hlavičky, takže mezi ní a plochou zela díra a plocha zůstala malá.
+Když má volné místo dostat jeden řádek, musí se říct: `grid-template-rows: auto minmax(0, 1fr)`.
+
+## Terč pro prst má mít tvar toho, co je vidět
+
+U izometrie jsem terče neodvozoval z inverzní projekce, ale udělal z každé stěny kostky
+vlastní zkosený čtverec (`transform` mění i hit-testing). Klepnutí pak z definice trefí to,
+na co se dívám, a zakryté kousky podlahy patří kostce, která je zakrývá. Ušetřilo to
+celou jednu třídu chyb — a stejné pravidlo platí i jinde: terč kreslit, ne počítat.

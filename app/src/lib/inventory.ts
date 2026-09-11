@@ -1,44 +1,71 @@
 /**
  * Stavění: inventář a plocha.
  *
- * Jediný ukládaný stav je mapa buněk `Build` ("x,y" → druh kostky). Kolik čeho zbývá
+ * Jediný ukládaný stav je mapa buněk `Build` ("x,y,z" → druh kostky). Kolik čeho zbývá
  * v truhle se **nikde neukládá** — počítá se jako nasbírané(druh) − kostky téhož druhu
  * na ploše. Nemůže tak vzniknout rozpor mezi dvěma čísly a poškozený localStorage
  * se sám srovná.
  *
  * Invariant: pro každý druh platí `v truhle + na ploše = nasbírané`.
+ *
+ * Souřadnice a promítání na obrazovku řeší `iso.ts`.
  */
 
 import { BLOCKS, countTypes, type Block, type Counts } from "./blocks";
-
-/** Pevná logická mřížka, ať stavba vypadá stejně na telefonu i na tabletu. */
-export const BUILD_COLS = 16;
-export const BUILD_ROWS = 12;
+import { ISO_COLS, ISO_LEVELS, parseVoxel, voxelKey, type Voxel } from "./iso";
 
 export type Cell = string;
 export type Build = Record<Cell, Block>;
 
-export function cellKey(x: number, y: number): Cell {
-  return `${x},${y}`;
+export function cellKey(x: number, y: number, z: number): Cell {
+  return voxelKey(x, y, z);
 }
 
-export function parseCell(key: Cell): { x: number; y: number } | null {
-  const m = /^(\d+),(\d+)$/.exec(key);
-  if (!m) return null;
-
-  const x = Number(m[1]);
-  const y = Number(m[2]);
-  if (x >= BUILD_COLS || y >= BUILD_ROWS) return null;
-
-  return { x, y };
+export function parseCell(key: Cell): Voxel | null {
+  return parseVoxel(key);
 }
 
-/** Očistí uloženou stavbu — vyhodí neznámé druhy i buňky mimo mřížku. */
+/**
+ * Stavba z první verze stavění: plocha byla svislá zeď, klíč "x,y" a `y` byla výška.
+ * Převede se na zeď vzadu (`y = 0`) a kostky v každém sloupci se **sesypou k zemi**,
+ * aby ve stavbě nezůstaly mezery po kostkách mimo scénu. Co se nevejde, zůstane
+ * v truhle — zásoba se počítá z toho, co na ploše je.
+ */
+function migrateFlat(raw: Record<string, unknown>): Build {
+  const columns = new Map<number, { at: number; type: Block }[]>();
+
+  for (const [key, value] of Object.entries(raw)) {
+    const m = /^(\d+),(\d+)$/.exec(key);
+    if (!m || !BLOCKS.includes(value as Block)) continue;
+
+    const x = Number(m[1]);
+    if (x >= ISO_COLS) continue;
+
+    const column = columns.get(x) ?? [];
+    column.push({ at: Number(m[2]), type: value as Block });
+    columns.set(x, column);
+  }
+
+  const build: Build = {};
+  for (const [x, column] of columns) {
+    column.sort((a, b) => a.at - b.at);
+    column.slice(0, ISO_LEVELS).forEach((item, z) => {
+      build[cellKey(x, 0, z)] = item.type;
+    });
+  }
+  return build;
+}
+
+/** Očistí uloženou stavbu — vyhodí neznámé druhy i buňky mimo scénu. */
 export function sanitizeBuild(raw: unknown): Build {
   const build: Build = {};
   if (!raw || typeof raw !== "object") return build;
 
-  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+  const entries = Object.entries(raw as Record<string, unknown>);
+  const flat = entries.length > 0 && entries.every(([key]) => /^\d+,\d+$/.test(key));
+  if (flat) return migrateFlat(raw as Record<string, unknown>);
+
+  for (const [key, value] of entries) {
     if (!parseCell(key)) continue;
     if (!BLOCKS.includes(value as Block)) continue;
     build[key] = value as Block;
@@ -72,11 +99,12 @@ export function stock(banked: number, build: Build, collected = countTypes(0, ba
 export type BuildAction =
   | { kind: "place"; cell: Cell; type: Block }
   | { kind: "take"; cell: Cell }
-  | { kind: "move"; from: Cell; to: Cell };
+  | { kind: "move"; from: Cell; to: Cell }
+  | { kind: "clear" };
 
 /**
  * Provede akci a vrátí novou mapu buněk, nebo `null`, když akce nejde
- * (obsazená buňka, prázdný zdroj, nedostatek kostek).
+ * (obsazená buňka, buňka mimo scénu, prázdný zdroj, nedostatek kostek).
  */
 export function apply(
   build: Build,
@@ -84,6 +112,11 @@ export function apply(
   banked: number,
   collected = countTypes(0, banked),
 ): Build | null {
+  if (action.kind === "clear") {
+    // celá plocha se vrátí do truhly; na prázdné ploše není co bourat
+    return Object.keys(build).length ? {} : null;
+  }
+
   if (action.kind === "place") {
     if (!parseCell(action.cell) || build[action.cell]) return null;
     if ((stock(banked, build, collected)[action.type] ?? 0) <= 0) return null;
