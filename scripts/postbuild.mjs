@@ -1,7 +1,7 @@
 /**
  * Po buildu dorovná to, co Vite neumí:
  *
- *   dist/index.html        doplní faviconu (dřevěná kostka jako inline SVG)
+ *   dist/index.html        doplní faviconu (dřevěná kostka z cube.mjs jako inline SVG)
  *   dist/sw.js             service worker s precache podle skutečných jmen assetů
  *   artifact/matika.html   jeden soubor s inlinovaným JS a CSS, bez obálky,
  *                          fonty z CDN → publikování jako Claude Artifact
@@ -12,31 +12,10 @@ import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { faviconHref } from "./cube.mjs";
+
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const dist = join(root, "dist");
-
-/* ---------- favicona: stejná dřevěná kostka jako dosud ---------- */
-
-const TOP = "matrix(1,.5,-1,.5,16,0)";
-const LEFT = "matrix(1,.5,0,1,0,8)";
-const RIGHT = "matrix(1,-.5,0,1,16,16)";
-
-function face(mat, base, pixels) {
-  const rects = pixels.flatMap(([color, cells]) =>
-    cells.map(([u, v]) => `<rect x="${u}" y="${v}" width="4" height="4" fill="${color}"/>`),
-  );
-  return `<g transform="${mat}"><rect width="16" height="16" fill="${base}"/>${rects.join("")}</g>`;
-}
-
-function faviconHref() {
-  const plank =
-    face(TOP, "#B08B54", [["#9E7A45", [[0, 4], [4, 4], [8, 4], [12, 4], [0, 12], [4, 12], [8, 12], [12, 12]]]]) +
-    face(LEFT, "#9A7748", [["#89673B", [[0, 4], [4, 4], [8, 4], [12, 4]]], ["#A58453", [[8, 0], [0, 8], [12, 12]]]]) +
-    face(RIGHT, "#7E5C31", [["#6E4F29", [[0, 4], [4, 4], [8, 4], [12, 4]]], ["#8B6839", [[4, 0], [12, 8], [0, 12]]]]);
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" shape-rendering="crispEdges">${plank}</svg>`;
-  return "data:image/svg+xml," + encodeURIComponent(svg).replace(/%2F/g, "/").replace(/%3A/g, ":").replace(/%3D/g, "=");
-}
 
 /* ---------- service worker ---------- */
 
@@ -140,7 +119,19 @@ const assets = [
   "icon-maskable-512.png",
   ...files.map((f) => `assets/${f}`),
 ];
-const stamp = createHash("sha1").update(withIcon + assets.join()).digest("hex").slice(0, 10);
+/*
+ * Jméno cache musí odpovídat **obsahu** všech předcachovaných souborů, ne jen jejich
+ * jmen. Assety mají hash v názvu, ale ikony a manifest ne — když se změnila jen ikona,
+ * jméno cache zůstalo stejné, service worker se nepřeinstaloval a lidem by zůstala
+ * stará ikona v cache.
+ */
+const bytes = await Promise.all(
+  assets.filter((a) => a !== "./").map((a) => readFile(join(dist, a))),
+);
+const digest = createHash("sha1");
+digest.update(withIcon);
+for (const b of bytes) digest.update(b);
+const stamp = digest.digest("hex").slice(0, 10);
 await writeFile(join(dist, "sw.js"), serviceWorker(assets, stamp), "utf8");
 
 // 3) Artifact

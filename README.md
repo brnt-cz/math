@@ -54,12 +54,27 @@ Appka jde přidat na plochu telefonu/tabletu a funguje **bez sítě**:
 
 - `manifest.json` — standalone režim, ikony 192/512 + maskable, obě orientace
 - `sw.js` — service worker, který si při první návštěvě uloží celou appku
-  (stránku, ikony, fonty). Jméno cache obsahuje hash `index.html`, takže
-  se po nasazení nové verze sama obnoví a stará cache se smaže. Precache jde
-  přes `cache: "reload"`, aby se neuložila verze z HTTP cache prohlížeče.
+  (stránku, ikony, fonty). Jméno cache je hash **obsahu** všech předcachovaných
+  souborů, takže se po nasazení nové verze sama obnoví a stará cache se smaže —
+  na jménech assetů by to nestačilo, ikony a manifest hash v názvu nemají.
+  Precache jde přes `cache: "reload"`, aby se neuložila verze z HTTP cache prohlížeče.
 - Fonty jsou **hostované u nás** (`fonts/*.woff2`, variabilní, podmnožiny
   latin + latin-ext kvůli diakritice) — offline tedy nechybí a nejde
   ani žádný požadavek na cizí server.
+
+### Ikony
+
+Favicona i všechny tři PNG ikony jsou ta samá dřevěná kostka z `scripts/cube.mjs`,
+aby se nemohly rozejít. PNG se vykreslují ze SVG, které vypíše `scripts/icon.mjs`
+(otevřít v prohlížeči na daný rozměr a uložit):
+
+```bash
+node scripts/icon.mjs icon-maskable-512.png > icon.svg
+```
+
+Kostka je vycentrovaná na svůj šestiúhelník. **Maskovatelná ikona** má kostku menší
+(352 px z 512): systém ji obřezává podle svého tvaru a zaručená je jen kružnice
+o průměru 80 % plátna, takže na větší kostku by kruhová maska seřízla horní vrchol.
 
 Verze pro Claude Artifact (`artifact/matika.html`) je jeden soubor s inlinovaným JS
 a CSS, bez obálky `<html>/<head>/<body>` — a fonty si bere z Google CDN, protože
@@ -84,8 +99,10 @@ fragment nemůže odkazovat na lokální soubory.
       public/              manifest.json a ikony
     dist/                  build — tohle se nasazuje (commituje se)
     artifact/matika.html   build pro publikování jako Claude Artifact (commituje se)
+    scripts/cube.mjs       dřevěná kostka pro faviconu i ikony PWA
+    scripts/icon.mjs       vypíše SVG jedné ikony PWA
     scripts/postbuild.mjs  favicona, sw.js s precache, artifact
-    tests/                 vitest — 40 testů logiky
+    tests/                 vitest — 67 testů logiky
     tasks/                 plány, průběh a lekce
 
 ## Sestavení a nasazení
