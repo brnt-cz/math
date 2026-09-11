@@ -104,3 +104,35 @@ U izometrie jsem terče neodvozoval z inverzní projekce, ale udělal z každé 
 vlastní zkosený čtverec (`transform` mění i hit-testing). Klepnutí pak z definice trefí to,
 na co se dívám, a zakryté kousky podlahy patří kostce, která je zakrývá. Ušetřilo to
 celou jednu třídu chyb — a stejné pravidlo platí i jinde: terč kreslit, ne počítat.
+
+## Změněnou ikonu PWA si Android nechá starou, dokud se appka nepřeinstaluje
+
+**2026-09-11, MATH-5.** Maskovatelná ikona byla posazená nízko. Po opravě a nasazení
+zadavatel musel appku z plochy odebrat a přidat znovu, aby se ikona srovnala — samo se to
+neobnovilo, ani když ikony v manifestu dostaly `?v=2`.
+
+O obnovení ikony na ploše rozhoduje systém, ne appka. Po změně ikony to proto rovnou hlásit
+jako nutný krok, ne slibovat, že se to spraví samo.
+
+## Jméno cache service workeru musí hashovat obsah, ne jména souborů
+
+Tamtéž: jméno cache se počítalo z `index.html` a **jmen** assetů. Assety mají hash v názvu,
+ale ikony a manifest ne — po opravě ikony by jméno cache zůstalo stejné, service worker by
+se nepřeinstaloval a lidem by v cache zůstala stará ikona. Oprava by se tak vůbec
+neprojevila.
+
+Pravidlo: do jména cache hashovat **obsah** všeho, co se předcachovává.
+
+## Jedna kresba na dvou místech se rozejde — hlídat testem
+
+Dřevěná kostka byla ve `BlockDefs.vue` (appka) i v generátoru ikon. Ikony se kvůli tomu
+tiše rozešly s faviconou. Sdílet kód nešlo (jedno se kreslí v prohlížeči, druhé v Node při
+buildu), takže se obě místa **porovnávají testem**. Když se duplikace nedá odstranit, dá se
+aspoň zafixovat.
+
+## Pixel art: prkna od cihel odlišují dlouhé pásy a žilky do délky
+
+Když jsem prknům dal svislou spáru do každého pásu a krátké světlé tahy, vzniklo cihlové
+zdivo. Prkna čtou jako prkna, když jsou pásy dlouhé a nepřerušené, svislá spára je na stěně
+jen jedna a žilky jdou do délky. A jednopixelové spáry potřebují
+`shape-rendering="crispEdges"`, jinak se rozmažou do dvou poloprůhledných řádků.
