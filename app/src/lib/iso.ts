@@ -1,12 +1,16 @@
 /**
  * Izometrie plochy na stavění.
  *
+ * Uložená stavba je ve **světových** souřadnicích, kreslení a klepání běží
+ * v souřadnicích **pohledu** — mezi nimi překlápí `toView` a `toWorld` podle otočení
+ * plochy. Projekce, hloubka ani matice stěn o otočení nevědí.
+ *
  * Kostky v SVG **už izometrické kostky jsou**: obal je čtverec 32 × 32 a hrana kostky
  * je 16 jednotek, tedy polovina obalu. Stačí je proto správně rozmístit — grafika se
  * nemění vůbec. Rozměry se tady počítají v násobcích obalu (`s`), CSS si je pak
  * vynásobí velikostí kostky.
  *
- * Osy: `x` doprava dopředu, `y` doleva dopředu, `z` nahoru. Na obrazovce
+ * Osy pohledu: `a` doprava dopředu, `b` doleva dopředu, `z` nahoru. Na obrazovce
  *
  *     x → (+s/2, +s/4)      y → (−s/2, +s/4)      z → (0, −s/2)
  *
@@ -21,6 +25,40 @@ export const ISO_DEPTH = 16;
 export const ISO_LEVELS = 8;
 
 export type Voxel = { x: number; y: number; z: number };
+
+/** Otočení pohledu po 90°: 0°, 90°, 180°, 270°. */
+export type Turn = 0 | 1 | 2 | 3;
+export const TURNS: Turn[] = [0, 1, 2, 3];
+
+/** Mřížka je čtvercová, takže se otočením mapuje sama na sebe. */
+const LAST = ISO_COLS - 1;
+
+/**
+ * Svět → pohled. Otočení je rotace čtvercové mřížky, výška se nemění.
+ *
+ * Krok `+1` otáčí plochou **po směru hodinových ručiček**, jak to čeká ruka u tlačítka
+ * ↻: zadní kout kosočtverce (svět 0, 0) se posune doprava. Kdyby to bylo naopak,
+ * tlačítka by fungovala obráceně.
+ */
+export function toView(v: Voxel, turn: Turn): Voxel {
+  if (turn === 1) return { x: LAST - v.y, y: v.x, z: v.z };
+  if (turn === 2) return { x: LAST - v.x, y: LAST - v.y, z: v.z };
+  if (turn === 3) return { x: v.y, y: LAST - v.x, z: v.z };
+  return { ...v };
+}
+
+/** Pohled → svět, tedy přesně naopak. */
+export function toWorld(v: Voxel, turn: Turn): Voxel {
+  if (turn === 1) return { x: v.y, y: LAST - v.x, z: v.z };
+  if (turn === 2) return { x: LAST - v.x, y: LAST - v.y, z: v.z };
+  if (turn === 3) return { x: LAST - v.y, y: v.x, z: v.z };
+  return { ...v };
+}
+
+/** Otočení o krok doleva nebo doprava, pořád v rozsahu 0–3. */
+export function turned(turn: Turn, step: number): Turn {
+  return (((turn + step) % 4) + 4) % 4 as Turn;
+}
 
 /** Stěny, které jsou z tohohle pohledu vidět. */
 export type Face = "top" | "right" | "left";
@@ -98,6 +136,14 @@ export function sceneSize(levels = ISO_LEVELS): { w: number; h: number } {
  */
 export function floorAt(x: number, y: number, levels = ISO_LEVELS): { left: number; top: number } {
   return boxAt({ x, y, z: -1 }, levels);
+}
+
+/**
+ * Stěna, na které leží plocha portálu. Rovina se určuje ve světě (stojí `x`, nebo `y`),
+ * ale kreslí se v pohledu — a otočení o 90° tyhle dvě roviny prohodí.
+ */
+export function portalFace(plane: "x" | "y", turn: Turn): Face {
+  return (plane === "y") === (turn % 2 === 0) ? "left" : "right";
 }
 
 /**

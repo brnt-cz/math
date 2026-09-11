@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   FACES,
+  TURNS,
   ISO_COLS,
   ISO_DEPTH,
   ISO_LEVELS,
@@ -11,9 +12,14 @@ import {
   inScene,
   neighbor,
   parseVoxel,
+  portalFace,
   sceneSize,
+  toView,
+  toWorld,
+  turned,
   voxelKey,
   type Face,
+  type Turn,
   type Voxel,
 } from "../app/src/lib/iso";
 
@@ -157,6 +163,92 @@ describe("izometrie", () => {
 
     expect(boxAt({ x: v.x, y: v.y, z: v.z + 1 })).toEqual(boxAt({ x: v.x - 1, y: v.y - 1, z: v.z }));
     expect(depth({ x: v.x, y: v.y, z: v.z + 1 })).toBeGreaterThan(depth({ x: v.x - 1, y: v.y - 1, z: v.z }));
+  });
+
+  it("otočení tam a zpátky dá tu samou buňku", () => {
+    for (const turn of TURNS) {
+      for (const v of everyVoxel()) {
+        expect(toWorld(toView(v, turn), turn), `${voxelKey(v.x, v.y, v.z)} @ ${turn}`).toEqual(v);
+        expect(toView(toWorld(v, turn), turn)).toEqual(v);
+      }
+    }
+  });
+
+  it("otočení je přerovnání mřížky: nic nezmizí, nic se nesloučí", () => {
+    for (const turn of TURNS) {
+      const seen = new Set<string>();
+
+      for (const v of everyVoxel()) {
+        const view = toView(v, turn);
+        expect(inScene(view), `${voxelKey(v.x, v.y, v.z)} @ ${turn}`).toBe(true);
+        expect(view.z).toBe(v.z);
+        seen.add(voxelKey(view.x, view.y, view.z));
+      }
+      expect(seen.size).toBe(everyVoxel().length);
+    }
+  });
+
+  it("bez otočení se souřadnice nemění a sousedi zůstávají sousedy", () => {
+    const v = { x: 3, y: 5, z: 2 };
+    expect(toView(v, 0)).toEqual(v);
+    expect(toWorld(v, 0)).toEqual(v);
+
+    // vzdálenost dvou buněk je na otočení nezávislá
+    for (const turn of TURNS) {
+      const a = toView({ x: 3, y: 5, z: 2 }, turn);
+      const b = toView({ x: 4, y: 5, z: 2 }, turn);
+      expect(Math.abs(a.x - b.x) + Math.abs(a.y - b.y)).toBe(1);
+    }
+  });
+
+  it("krok doprava otáčí plochou po směru hodin", () => {
+    // zadní kout kosočtverce je svět (0, 0); po kroku doprava má být vpravo,
+    // po dalším vepředu a po dalším vlevo. Jinak by tlačítka ↺ ↻ fungovala obráceně.
+    const back = { x: 0, y: 0, z: 0 };
+
+    expect(toView(back, 0)).toEqual({ x: 0, y: 0, z: 0 });
+    expect(toView(back, 1)).toEqual({ x: ISO_COLS - 1, y: 0, z: 0 });
+    expect(toView(back, 2)).toEqual({ x: ISO_COLS - 1, y: ISO_DEPTH - 1, z: 0 });
+    expect(toView(back, 3)).toEqual({ x: 0, y: ISO_DEPTH - 1, z: 0 });
+
+    // na obrazovce to znamená: doprava, pak dolů, pak doleva
+    const at = (turn: Turn) => boxAt(toView(back, turn));
+    expect(at(1).left).toBeGreaterThan(at(0).left);
+    expect(at(2).top).toBeGreaterThan(at(1).top);
+    expect(at(3).left).toBeLessThan(at(2).left);
+  });
+
+  it("otáčení se cyklí po čtyřech krocích", () => {
+    expect(turned(0, 1)).toBe(1);
+    expect(turned(3, 1)).toBe(0);
+    expect(turned(0, -1)).toBe(3);
+    expect(turned(2, 2)).toBe(0);
+
+    // čtyři kroky doprava jsou zpátky na začátku
+    let turn: Turn = 0;
+    for (let i = 0; i < 4; i++) turn = turned(turn, 1);
+    expect(turn).toBe(0);
+
+    for (const t of TURNS) {
+      const v = { x: 6, y: 2, z: 1 };
+      let out = v;
+      for (let i = 0; i < 4; i++) out = toView(out, t);
+      expect(turned(t, 4)).toBe(t);
+      expect(out.z).toBe(v.z);
+    }
+  });
+
+  it("otočení o 90° prohodí roviny portálu", () => {
+    // bez otočení: rovina y se kreslí na levou stěnu, rovina x na pravou
+    expect(portalFace("y", 0)).toBe("left");
+    expect(portalFace("x", 0)).toBe("right");
+
+    expect(portalFace("y", 1)).toBe("right");
+    expect(portalFace("x", 1)).toBe("left");
+    expect(portalFace("y", 2)).toBe("left");
+    expect(portalFace("x", 2)).toBe("right");
+    expect(portalFace("y", 3)).toBe("right");
+    expect(portalFace("x", 3)).toBe("left");
   });
 
   it("celá scéna i s podlahou se vejde do svého rámce", () => {

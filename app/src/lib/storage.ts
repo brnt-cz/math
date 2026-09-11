@@ -7,6 +7,7 @@
  */
 
 import { OP_KEYS, type Ops } from "./generator";
+import { TURNS, type Turn } from "./iso";
 import { BANK_SIZE } from "./chest";
 import { sanitizeBuild, type Build } from "./inventory";
 
@@ -20,6 +21,8 @@ export type State = {
   tower: number;
   banked: number;
   build: Build;
+  /** otočení plochy na stavění, 0–3 */
+  turn: Turn;
 };
 
 export type StorageLike = {
@@ -36,6 +39,7 @@ export function defaultState(): State {
     tower: 0,
     banked: 0,
     build: {},
+    turn: 0,
   };
 }
 
@@ -83,6 +87,9 @@ export function load(storage: StorageLike): State {
   state.banked = whole(saved.banked) - (whole(saved.banked) % BANK_SIZE);
   state.build = sanitizeBuild(saved.build);
 
+  // starší data otočení neznají, těm patří pohled bez otočení
+  if (TURNS.includes(saved.turn as Turn)) state.turn = saved.turn as Turn;
+
   return state;
 }
 
@@ -98,6 +105,7 @@ export function save(storage: StorageLike, state: State): void {
         tower: state.tower,
         banked: state.banked,
         build: state.build,
+        turn: state.turn,
       }),
     );
   } catch {

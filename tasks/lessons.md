@@ -136,3 +136,13 @@ Když jsem prknům dal svislou spáru do každého pásu a krátké světlé tah
 zdivo. Prkna čtou jako prkna, když jsou pásy dlouhé a nepřerušené, svislá spára je na stěně
 jen jedna a žilky jdou do délky. A jednopixelové spáry potřebují
 `shape-rendering="crispEdges"`, jinak se rozmažou do dvou poloprůhledných řádků.
+
+## U otáčení pohledu fixovat směr testem
+
+**2026-09-11, MATH-4.** Tlačítka ↺ ↻ otáčela plochou obráceně, než čekala ruka. Matematika
+byla správná (převod tam a zpátky i přerovnání mřížky testy procházely), jen měla obrácené
+znaménko — a žádný z testů na to nesahal.
+
+Poučení: u čehokoli, co má na obrazovce **směr** (otáčení, posun, řazení), napsat test,
+který ten směr pojmenuje — „zadní kout je po kroku doprava vpravo“. Testy na invarianty
+(round-trip, bijekce) takovou chybu nikdy nenajdou.

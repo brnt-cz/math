@@ -33,6 +33,7 @@ describe("uložený stav", () => {
       tower: 17,
       banked: 300,
       build: { "3,4,0": "grass", "4,4,1": "stone" },
+      turn: 2,
     };
 
     const store = memory();
@@ -41,7 +42,7 @@ describe("uložený stav", () => {
 
     // a v úložišti je opravdu původní klíč a stejná pole
     expect(Object.keys(JSON.parse(store.data[KEY] as string)).sort()).toEqual(
-      ["banked", "best", "build", "ops", "range", "terms", "tower"],
+      ["banked", "best", "build", "ops", "range", "terms", "tower", "turn"],
     );
   });
 
@@ -55,6 +56,16 @@ describe("uložený stav", () => {
     expect(state.banked).toBe(3300);
     expect(state.best).toBe(12);
     expect(state.build).toEqual({ "5,2,0": "plank" });
+  });
+
+  it("otočení plochy přežije zavření, stará data ho neznají", () => {
+    const store = memory(JSON.stringify({ banked: 300, turn: 3 }));
+    expect(load(store).turn).toBe(3);
+
+    // starý stav ani nesmysl otočení nemá, patří mu pohled bez otočení
+    expect(load(memory(JSON.stringify({ banked: 300 }))).turn).toBe(0);
+    expect(load(memory(JSON.stringify({ turn: 7 }))).turn).toBe(0);
+    expect(load(memory(JSON.stringify({ turn: "vlevo" }))).turn).toBe(0);
   });
 
   it("rozumí starému formátu znamének jako textu", () => {

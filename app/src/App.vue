@@ -184,8 +184,10 @@ onBeforeUnmount(() => {
       :stock="inStock"
       :picked="state.picked"
       :wrecking="state.wrecking"
+      :turn="state.turn"
       :side-layout="sideLayout"
       @action="game.buildAction"
+      @rotate="game.rotate"
       @update:picked="state.picked = $event"
       @update:wrecking="state.wrecking = $event"
     />

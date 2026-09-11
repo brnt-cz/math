@@ -677,6 +677,13 @@
 
   .wreck[aria-pressed="true"] { border-color: var(--bad); background: var(--bad); color: #FFFFFF; }
 
+  /* otáčení plochy: dvě tlačítka jen se symbolem */
+  .wreck.turn {
+    font-size: 1.125rem;
+    line-height: 1;
+    padding: .3125rem .5rem;
+  }
+
   /* Zbourat vše je druhořadé, ať se do něj nepraští omylem */
   .wreck.clear { font-size: .8125rem; padding: .4375rem .625rem; }
   .wreck.clear:disabled { opacity: .4; cursor: default; }
