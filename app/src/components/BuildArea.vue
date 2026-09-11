@@ -3,6 +3,11 @@
      na sebe navazují bez mezer. Terč pro prst je samotná stěna kostky: co je vidět,
      na to se dá klepnout — a co kostka zakryje, patří jí.
 
+     Uložená stavba je ve **světových** souřadnicích, kreslení a terče běží
+     v souřadnicích **pohledu**. Mezi nimi se překlápí `toView` a `toWorld` podle
+     otočení plochy: co jde do `build`, je vždycky svět; co má pozici na obrazovce,
+     je vždycky pohled.
+
      Všechno se řeší z pointer událostí (žádné `click`), protože vlastní tažení
      musí v `pointerdown` zavolat `preventDefault`, aby ho prohlížeč nepřebil
      nativním tažením. -->
@@ -21,11 +26,15 @@ import {
   floorAt,
   inScene,
   levelsFor,
+  portalFace,
   neighbor,
   parseVoxel,
   sceneSize,
+  toView,
+  toWorld,
   voxelKey,
   type Face,
+  type Turn,
 } from "../lib/iso";
 import { cellKey, type Build, type BuildAction, type Cell } from "../lib/inventory";
 import { portalCells } from "../lib/portal";
@@ -36,11 +45,13 @@ const props = defineProps<{
   stock: Counts;
   picked: Block | null;
   wrecking: boolean;
+  turn: Turn;
   sideLayout: boolean;
 }>();
 
 const emit = defineEmits<{
   (e: "action", value: BuildAction): void;
+  (e: "rotate", step: number): void;
   (e: "update:picked", value: Block | null): void;
   (e: "update:wrecking", value: boolean): void;
 }>();
@@ -139,10 +150,11 @@ const floor = computed(() =>
     const x = i % ISO_COLS;
     const y = Math.floor(i / ISO_COLS);
     const { left, top } = floorAt(x, y, levels.value);
+    const world = toWorld({ x, y, z: 0 }, props.turn);
 
     return {
       key: voxelKey(x, y, 0),
-      target: cellKey(x, y, 0),
+      target: cellKey(world.x, world.y, world.z),
       alt: (x + y) % 2 === 1,
       style: { ...frame(left, top), transform: faceTransform("top", cell.value) },
     };
@@ -159,12 +171,14 @@ const blocks = computed(() => {
   const out: { key: Cell; sprite: Sprite; zi: number; style: Record<string, string>; faces: Side[] }[] = [];
 
   for (const [key, type] of Object.entries(props.build)) {
-    const v = parseVoxel(key);
-    if (!v || key === lifted.value) continue;
+    const world = parseVoxel(key);
+    if (!world || key === lifted.value) continue;
 
+    // kreslí se v pohledu, ale „kostka nad" je věc světa, na otočení nezávislá
+    const v = toView(world, props.turn);
     const { left, top } = boxAt(v, levels.value);
     const zi = 10 + depth(v) * 2;
-    const above = cellKey(v.x, v.y, v.z + 1);
+    const above = cellKey(world.x, world.y, world.z + 1);
 
     out.push({
       key,
@@ -173,9 +187,10 @@ const blocks = computed(() => {
       style: { ...frame(left, top), zIndex: String(zi) },
       faces: FACES.map((face) => {
         const to = neighbor(v, face);
+        const target = toWorld(to, props.turn);
         return {
           face,
-          target: inScene(to) ? cellKey(to.x, to.y, to.z) : null,
+          target: inScene(to) ? cellKey(target.x, target.y, target.z) : null,
           style: { ...frame(left, top), zIndex: String(zi + 1), transform: faceTransform(face, cell.value) },
         };
       }),
@@ -191,16 +206,17 @@ const blocks = computed(() => {
  */
 const portal = computed(() =>
   [...portalCells(props.build)].flatMap(([key, plane]) => {
-    const v = parseVoxel(key);
-    if (!v) return [];
+    const world = parseVoxel(key);
+    if (!world) return [];
 
+    const v = toView(world, props.turn);
     const { left, top } = boxAt(v, levels.value);
     return [{
       key,
       style: {
         ...frame(left, top),
         zIndex: String(10 + depth(v) * 2),
-        transform: faceTransform(plane === "y" ? "left" : "right", cell.value),
+        transform: faceTransform(portalFace(plane, props.turn), cell.value),
       },
     }];
   }),
@@ -211,9 +227,10 @@ const ghost = computed(() => {
   if (props.wrecking) return null;
 
   const cell = hint.value ?? (press.value ? null : hover.value);
-  const v = cell && !props.build[cell] ? parseVoxel(cell) : null;
-  if (!v) return null;
+  const world = cell && !props.build[cell] ? parseVoxel(cell) : null;
+  if (!world) return null;
 
+  const v = toView(world, props.turn);
   const { left, top } = boxAt(v, levels.value);
   return { ...frame(left, top), zIndex: String(11 + depth(v) * 2) };
 });
@@ -395,6 +412,16 @@ function clearAll(e: MouseEvent): void {
   emit("update:wrecking", false);
 }
 
+function turnBy(step: number, e: MouseEvent): void {
+  if (e.detail > 0) (e.currentTarget as HTMLElement | null)?.blur();
+
+  // po otočení leží pod kurzorem něco jiného, takže míření i rozdělané tažení padá
+  cancel();
+  leave();
+  resetConfirm();
+  emit("rotate", step);
+}
+
 function toggleWreck(e: MouseEvent): void {
   resetConfirm();
   if (e.detail > 0) (e.currentTarget as HTMLElement | null)?.blur();
@@ -495,6 +522,28 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="tools">
+        <button
+          type="button"
+          class="wreck turn"
+          id="turn-left"
+          title="Otočit plochu doleva"
+          aria-label="Otočit plochu doleva"
+          @click="turnBy(-1, $event)"
+        >
+          ↺
+        </button>
+
+        <button
+          type="button"
+          class="wreck turn"
+          id="turn-right"
+          title="Otočit plochu doprava"
+          aria-label="Otočit plochu doprava"
+          @click="turnBy(1, $event)"
+        >
+          ↻
+        </button>
+
         <button type="button" class="wreck" id="wreck" :aria-pressed="wrecking" @click="toggleWreck">
           Bourat
         </button>

@@ -8,6 +8,7 @@ import { makeTask, type Task } from "../lib/generator";
 import { BANK_SIZE, chestList, firstChestFull } from "../lib/chest";
 import { countTypes, type Block } from "../lib/blocks";
 import { apply, stock, type BuildAction } from "../lib/inventory";
+import { turned } from "../lib/iso";
 import { load, save, type State } from "../lib/storage";
 
 /** Kolik příkladů má jedno kolo. */
@@ -54,7 +55,7 @@ export function useGame() {
   /* ---------- ukládání ---------- */
 
   watch(
-    () => [state.range, state.terms, state.ops, state.best, state.tower, state.banked, state.build],
+    () => [state.range, state.terms, state.ops, state.best, state.tower, state.banked, state.build, state.turn],
     () => {
       save(store, {
         range: state.range,
@@ -64,6 +65,7 @@ export function useGame() {
         tower: state.tower,
         banked: state.banked,
         build: state.build,
+        turn: state.turn,
       });
     },
     { deep: true },
@@ -85,6 +87,11 @@ export function useGame() {
     if (!next) return false;
     state.build = next;
     return true;
+  }
+
+  /** Otočení plochy o krok doleva (−1) nebo doprava (+1). */
+  function rotate(step: number): void {
+    state.turn = turned(state.turn, step);
   }
 
   function setMode(on: boolean): void {
@@ -232,6 +239,7 @@ export function useGame() {
     summary,
     setMode,
     buildAction,
+    rotate,
     startRound,
     typeDigit,
     backspace,

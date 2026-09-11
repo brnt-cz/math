@@ -83,3 +83,11 @@ u `.page.building`.
 9. **Nether portál** — obsidiánový rám (nejmíň 2 × 3) se pozná sám a vnitřek se zapálí
    fialovou plochou portálu. `lib/portal.ts` + 10 testů.
 10. **Pravé tlačítko bourá** — bez přepínání režimu; na dotyku zůstává režim „Bourat“.
+
+## MATH-4: rotace plochy
+
+Hotovo, podrobně v `tasks/MATH-4-rotace-plochy.md`.
+
+- `toView` / `toWorld` v `lib/iso.ts`; stavba zůstává ve světě, kreslení běží v pohledu.
+- Dvě tlačítka `↺ ↻`, otočení se ukládá a přežije zavření appky.
+- Zrádné bylo: směr otáčení (fixuje test), směr u bočních stěn a prohození rovin portálu.
