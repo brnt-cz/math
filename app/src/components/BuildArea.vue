@@ -51,6 +51,9 @@ const canvas = ref<HTMLElement | null>(null);
 const cell = ref(32);
 const hint = ref<Cell | null>(null);
 
+/** Kolik pixelů se smí ujet, než se z klepnutí stane tažení. */
+const SLOP = 8;
+
 type Press = {
   /** druh kostky v ruce: z palety, nebo zvednutý z plochy */
   type: Block | null;
@@ -61,11 +64,19 @@ type Press = {
   /** buňka, kam kostka spadne */
   target: Cell | null;
   moved: boolean;
+  /** místo stisku, od něj se měří, jestli už jde o tažení */
+  x0: number;
+  y0: number;
   x: number;
   y: number;
 };
 
 const press = ref<Press | null>(null);
+
+/** Buňka pod kurzorem a kostka, na kterou míří — v izometrii jinak není poznat,
+    jestli kostka spadne nahoru, nebo dozadu. */
+const hover = ref<Cell | null>(null);
+const hoverCube = ref<Cell | null>(null);
 
 /** Kolik pater stavba potřebuje: co je postaveno a jedno navíc, ať je kam pokračovat. */
 const needed = computed(() => {
@@ -172,9 +183,12 @@ const blocks = computed(() => {
   return out.sort((a, b) => a.zi - b.zi);
 });
 
-/** Náhled toho, kam kostka spadne. */
+/** Náhled toho, kam kostka spadne — při tažení pod prstem, jinak pod kurzorem. */
 const ghost = computed(() => {
-  const v = hint.value ? parseVoxel(hint.value) : null;
+  if (props.wrecking) return null;
+
+  const cell = hint.value ?? (press.value ? null : hover.value);
+  const v = cell && !props.build[cell] ? parseVoxel(cell) : null;
   if (!v) return null;
 
   const { left, top } = boxAt(v, levels.value);
@@ -199,7 +213,17 @@ function pickDown(type: Block, e: PointerEvent): void {
 
   emit("update:wrecking", false);
   emit("update:picked", type);
-  press.value = { type, from: null, cube: null, target: null, moved: false, x: e.clientX, y: e.clientY };
+  press.value = {
+    type,
+    from: null,
+    cube: null,
+    target: null,
+    moved: false,
+    x0: e.clientX,
+    y0: e.clientY,
+    x: e.clientX,
+    y: e.clientY,
+  };
 
   try {
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -223,6 +247,8 @@ function down(target: Cell | null, cube: Cell | null, e: PointerEvent): void {
     cube,
     target,
     moved: false,
+    x0: e.clientX,
+    y0: e.clientY,
     x: e.clientX,
     y: e.clientY,
   };
@@ -234,13 +260,27 @@ function down(target: Cell | null, cube: Cell | null, e: PointerEvent): void {
   }
 }
 
+/** Míření bez stisku: co je pod kurzorem a kam by kostka spadla. */
+function look(e: PointerEvent): void {
+  const hit = under(e.clientX, e.clientY)?.closest?.("[data-target], [data-cube]") as HTMLElement | null;
+  hover.value = hit?.dataset.target ?? null;
+  hoverCube.value = hit?.dataset.cube ?? null;
+}
+
 function move(e: PointerEvent): void {
   const p = press.value;
-  if (!p || !p.type) return;
+  if (!p) {
+    look(e);
+    return;
+  }
+  if (!p.type) return;
 
-  p.moved = true;
   p.x = e.clientX;
   p.y = e.clientY;
+
+  // malé ujetí prstu při klepnutí ještě není tažení, jinak by kostka odskočila
+  if (!p.moved && Math.hypot(e.clientX - p.x0, e.clientY - p.y0) < SLOP) return;
+  p.moved = true;
 
   const over = targetAt(e.clientX, e.clientY);
   hint.value = over && over !== p.from && !props.build[over] ? over : null;
@@ -249,6 +289,11 @@ function move(e: PointerEvent): void {
 function cancel(): void {
   press.value = null;
   hint.value = null;
+}
+
+function leave(): void {
+  hover.value = null;
+  hoverCube.value = null;
 }
 
 function up(e: PointerEvent): void {
@@ -330,6 +375,7 @@ onBeforeUnmount(() => observer?.disconnect());
         @pointermove="move"
         @pointerup="up"
         @pointercancel="cancel"
+        @pointerleave="leave"
         @dragstart.prevent
       >
         <div
@@ -351,6 +397,8 @@ onBeforeUnmount(() => observer?.disconnect());
             v-for="side in block.faces"
             :key="`${block.key}-${side.face}`"
             class="face"
+            :class="{ on: hoverCube === block.key }"
+            :data-cube="block.key"
             :data-name="NAMES[block.type]"
             :data-target="side.target ?? undefined"
             :style="side.style"
@@ -358,8 +406,8 @@ onBeforeUnmount(() => observer?.disconnect());
           />
         </template>
 
-        <div v-if="ghost" class="ghost" :style="ghost">
-          <BlockSprite v-if="press?.type || picked" :type="(press?.type ?? picked) as Block" />
+        <div v-if="ghost && (press?.type || picked)" class="ghost" :style="ghost">
+          <BlockSprite :type="(press?.type ?? picked) as Block" />
         </div>
       </div>
     </div>

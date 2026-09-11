@@ -52,12 +52,26 @@ Boční stěny umí převisy a oblouky. Protože nová kostka vždycky navazuje 
 se kleplo, nemusí se hlídat podpora zespodu; sebrat jde i kostka zespodu stavby, stejně
 jako v Minecraftu.
 
+Klepnutí se od tažení odděluje **osmipixelovou tolerancí** (`SLOP`): dokud prst neujede
+dál, jde o klepnutí a kostka, na kterou se kleplo, se nehýbe.
+
+Kostka pod kurzorem se celá zvýrazní (v režimu bourání červeně) a průhledný náhled ukáže,
+kam nová kostka spadne. Není to kosmetika: **patro výš vypadá v izometrii přesně stejně
+jako políčko dozadu** — `(x, y, z+1)` a `(x−1, y−1, z)` padnou na to samé místo, protože
+(1, 1, 1) je směr pohledu. Bez zvýraznění není poznat, jestli klepnutí staví nahoru, nebo
+na podlahu za kostkou; hlídá to i test.
+
+Z toho plyne jedna vlastnost, která se nedá „spravit“, protože je to pravda o izometrii:
+políčko podlahy **přímo za** kostkou je celé zakryté její horní stěnou, takže se na něj
+nedá klepnout. Dozadu se staví po osách (políčka vlevo i vpravo za kostkou zůstávají
+z poloviny vidět) nebo od zadu dopředu.
+
 Beze změny zůstává: tažení kostky jinam ji přesune, tažení na paletu ji vrátí do truhly,
 klepnutí s prázdnou rukou vezme druh kostky do ruky, režim „Bourat“ sundává.
 
 ## Rozměry scény
 
-Mřížka je 8 × 8 políček a 8 pater (`ISO_COLS`, `ISO_DEPTH`, `ISO_LEVELS`). Scéna se kreslí
+Mřížka je 16 × 16 políček a 8 pater (`ISO_COLS`, `ISO_DEPTH`, `ISO_LEVELS`). Scéna se kreslí
 jen na tolik pater, kolik se vejde do volné výšky — nejmíň ale na to, co je postaveno plus
 jedno navíc. Podlaha proto drží dole, stavba roste do vzduchu nad ní a plocha se pod rukama
 nepřerovnává. Rám plochy scénu obalí, takže po ní nezůstává prázdná bílá plocha.
@@ -65,7 +79,7 @@ nepřerovnává. Rám plochy scénu obalí, takže po ní nezůstává prázdná
 Velikost kostky je násobek čtyř, aby všechny pozice (`s/2`, `s/4`) padly na celé pixely
 a mezi kostkami nevznikaly světlé spáry.
 
-Na telefonu má kostka 40 px (dřív 21 px), na tabletu i desktopu 80 px.
+Kostka má na telefonu 20 px, na tabletu i desktopu 40 px.
 
 ## Uložená data
 
@@ -75,7 +89,7 @@ nevejde, zůstane v truhle. Invariant „v truhle + na ploše = nasbírané“ p
 
 ## Ověřeno
 
-- 49 testů (`npm test`), z toho 8 nových na izometrii: projekce, hloubka, rozměr scény,
+- 50 testů (`npm test`), z toho 9 nových na izometrii: projekce, hloubka, rozměr scény,
   celistvost podlahy, tři stěny pokryjí kostku a nepřekrývají se.
 - V prohlížeči na 1280×900, 810×1080, 390×844 a 844×390: klepnutí na pravou i levou stěnu,
   na horní stěnu i na políčko podlahy trefilo pokaždé očekávanou buňku; přesun tažením

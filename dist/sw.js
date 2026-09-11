@@ -1,6 +1,6 @@
 /* Vygenerováno scripts/postbuild.mjs — needituj tady. */
-var CACHE = "matika-be78ac58a3";
-var ASSETS = ["./","index.html","manifest.json","icon-192.png","icon-512.png","icon-maskable-512.png","assets/baloo-2-latin-B_TVFhwJ.woff2","assets/baloo-2-latin-ext-Dz43yst_.woff2","assets/index-4GqMC1F3.js","assets/lexend-latin-ci0D1wrL.woff2","assets/lexend-latin-ext-B6JQhE1e.woff2","assets/style-Dyxe6tLZ.css"];
+var CACHE = "matika-40d34e856b";
+var ASSETS = ["./","index.html","manifest.json","icon-192.png","icon-512.png","icon-maskable-512.png","assets/baloo-2-latin-B_TVFhwJ.woff2","assets/baloo-2-latin-ext-Dz43yst_.woff2","assets/index-7PZVYTPP.js","assets/lexend-latin-ci0D1wrL.woff2","assets/lexend-latin-ext-B6JQhE1e.woff2","assets/style-CE7_czxB.css"];
 
 self.addEventListener("install", function (e) {
   // cache: "reload" obchází HTTP cache prohlížeče, aby se nepředcachovala stará verze

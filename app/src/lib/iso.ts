@@ -15,8 +15,8 @@
  */
 
 /** Logická mřížka: šířka, hloubka a kolik pater se dá postavit. */
-export const ISO_COLS = 8;
-export const ISO_DEPTH = 8;
+export const ISO_COLS = 16;
+export const ISO_DEPTH = 16;
 /** Pater je víc, než se obvykle vejde na výšku — volné místo nad podlahou se tím využije. */
 export const ISO_LEVELS = 8;
 

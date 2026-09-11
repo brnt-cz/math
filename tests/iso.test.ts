@@ -149,6 +149,16 @@ describe("izometrie", () => {
     expect(depth({ ...v, z: v.z - 1 })).toBeLessThan(depth(v));
   });
 
+  it("patro výš vypadá stejně jako políčko dozadu", () => {
+    // (1,1,1) je směr pohledu, takže kostka nad a kostka o políčko dozadu padnou
+    // na stejné místo. Proto se kostka pod kurzorem zvýrazňuje — jinak není poznat,
+    // jestli klepnutí staví nahoru, nebo na podlahu za ní.
+    const v = { x: 5, y: 5, z: 1 };
+
+    expect(boxAt({ x: v.x, y: v.y, z: v.z + 1 })).toEqual(boxAt({ x: v.x - 1, y: v.y - 1, z: v.z }));
+    expect(depth({ x: v.x, y: v.y, z: v.z + 1 })).toBeGreaterThan(depth({ x: v.x - 1, y: v.y - 1, z: v.z }));
+  });
+
   it("celá scéna i s podlahou se vejde do svého rámce", () => {
     const { w, h } = sceneSize();
 

@@ -48,8 +48,8 @@ v Minecraftu.
 Hotovo, podrobně v `tasks/MATH-3-izometricke-staveni.md`.
 
 - `lib/iso.ts` — projekce, hloubka, rozměr scény a matice stěn jako čisté funkce, 8 testů.
-- Mřížka 8 × 8 × 8, klíč buňky `"x,y,z"`, stará plochá stavba se převede.
-- Kostka má na telefonu 40 px místo 21 px, na tabletu a desktopu 80 px.
+- Mřížka 16 × 16 × 8, klíč buňky `"x,y,z"`, stará plochá stavba se převede.
+- Kostka má na telefonu 20 px, na tabletu a desktopu 40 px.
 - Ověřeno v prohlížeči na 1280×900, 810×1080, 390×844 a 844×390 (dev i produkční build):
   klepnutí trefilo pokaždé očekávanou buňku, tažení i opakovaný přesun fungují,
   počítání a zeď beze změny, v konzoli nic.
@@ -59,3 +59,15 @@ Hotovo, podrobně v `tasks/MATH-3-izometricke-staveni.md`.
 Přebytečnou výšku dostávaly v mřížce **všechny** řádky `auto`, ne jen ta s plochou —
 hlavička se roztáhla a plocha zůstala malá. Řeší to `grid-template-rows: auto minmax(0, 1fr)`
 u `.page.building`.
+
+## Připomínky ze zkoušení (druhé kolo)
+
+1. **Plocha 16 × 16 a menší kostky** — hotovo.
+2. **Klepnutím se hýbala kostka, na kterou se kleplo** — tažení se teď pozná až po ujetí
+   8 px (`SLOP`), do té doby je to klepnutí.
+3. **Viditelnost** — kreslení bylo v pořádku (`z-index` = hloubka), chyba byla v míření:
+   políčko podlahy přímo za kostkou je celé zakryté její horní stěnou, takže klepnutí
+   „za kostku“ padlo na tu horní stěnu a kostka se postavila nahoru. `(x, y, z+1)`
+   a `(x−1, y−1, z)` se navíc kreslí na to samé místo, takže to ani nebylo poznat.
+   Přidané zvýraznění kostky pod kurzorem a náhled cíle to prozradí předem.
+4. **Kurzor pro bourání** — krumpáč (SVG v `cursor`), špička hlavy je bod, kterým se míří.
