@@ -91,3 +91,13 @@ Hotovo, podrobně v `tasks/MATH-4-rotace-plochy.md`.
 - `toView` / `toWorld` v `lib/iso.ts`; stavba zůstává ve světě, kreslení běží v pohledu.
 - Dvě tlačítka `↺ ↻`, otočení se ukládá a přežije zavření appky.
 - Zrádné bylo: směr otáčení (fixuje test), směr u bočních stěn a prohození rovin portálu.
+
+## MATH-6: časový limit na stavění
+
+Hotovo, podrobně v `tasks/MATH-6-cas-na-staveni.md`.
+
+- `lib/allowance.ts` — čisté účtování, uplynulé sekundy jako parametr (testy bez čekání).
+- `composables/useBuildClock.ts` — jediné místo s hodinami; rozdíly časových značek,
+  pauza na pozadí.
+- 10 minut stavění, 30 správně spočítaných příkladů na další zásobu, čas se nedá
+  střádat dopředu.

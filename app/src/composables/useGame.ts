@@ -9,6 +9,7 @@ import { BANK_SIZE, chestList, firstChestFull } from "../lib/chest";
 import { countTypes, type Block } from "../lib/blocks";
 import { apply, stock, type BuildAction } from "../lib/inventory";
 import { turned } from "../lib/iso";
+import { canBuild, remainingTasks, solved as solvedTask, spend } from "../lib/allowance";
 import { load, save, type State } from "../lib/storage";
 
 /** Kolik příkladů má jedno kolo. */
@@ -55,7 +56,17 @@ export function useGame() {
   /* ---------- ukládání ---------- */
 
   watch(
-    () => [state.range, state.terms, state.ops, state.best, state.tower, state.banked, state.build, state.turn],
+    () => [
+      state.range,
+      state.terms,
+      state.ops,
+      state.best,
+      state.tower,
+      state.banked,
+      state.build,
+      state.turn,
+      state.allowance,
+    ],
     () => {
       save(store, {
         range: state.range,
@@ -66,6 +77,7 @@ export function useGame() {
         banked: state.banked,
         build: state.build,
         turn: state.turn,
+        allowance: state.allowance,
       });
     },
     { deep: true },
@@ -77,10 +89,27 @@ export function useGame() {
   const collected = computed(() => countTypes(0, state.banked));
   const inStock = computed(() => stock(state.banked, state.build, collected.value));
 
+  /** Truhla je plná — stavění je vůbec ve hře. */
   const buildUnlocked = computed(() => {
     if (typeof location !== "undefined" && /[?&]stavet(=|&|$)/.test(location.search)) return true;
     return firstChestFull(chests.value);
   });
+
+  /** ...a zbývá i čas. */
+  const buildReady = computed(() => buildUnlocked.value && canBuild(state.allowance));
+  const tasksToBuild = computed(() => remainingTasks(state.allowance));
+
+  /** Odestavěné sekundy. Vrací true, když zásoba právě došla. */
+  function spendBuildTime(seconds: number): boolean {
+    if (!canBuild(state.allowance)) return false;
+
+    state.allowance = spend(state.allowance, seconds);
+    if (canBuild(state.allowance)) return false;
+
+    state.building = false;
+    note("Čas na stavění vypršel. Spočítej 30 příkladů a můžeš stavět dál.");
+    return true;
+  }
 
   function buildAction(action: BuildAction): boolean {
     const next = apply(state.build, action, state.banked, collected.value);
@@ -95,7 +124,7 @@ export function useGame() {
   }
 
   function setMode(on: boolean): void {
-    state.building = on && buildUnlocked.value;
+    state.building = on && buildReady.value;
     if (state.building) {
       state.wrecking = false;
       state.picked = null;
@@ -170,6 +199,7 @@ export function useGame() {
 
     if (parseInt(state.answer, 10) === state.task.result) {
       state.locked = true;
+      state.allowance = solvedTask(state.allowance);
       note((state.tries === 0 ? "Správně!" : "Správně, teď to je!") + " Kostka nahoru.", "ok");
 
       if (addBrick()) {
@@ -236,8 +266,11 @@ export function useGame() {
     collected,
     inStock,
     buildUnlocked,
+    buildReady,
+    tasksToBuild,
     summary,
     setMode,
+    spendBuildTime,
     buildAction,
     rotate,
     startRound,
