@@ -1,14 +1,24 @@
 /** Druhy kostek: vzhled, názvy a vážená vzácnost. */
 
-export const BLOCKS = ["grass", "stone", "plank", "sand", "nether", "obsidian"] as const;
+export const BLOCKS = ["grass", "stone", "cobble", "plank", "log", "sand", "nether", "obsidian"] as const;
 
 export type Block = (typeof BLOCKS)[number];
 
-/** Šance v procentech, od nejběžnějšího po nejvzácnější. Součet je 100. */
+/**
+ * Šance v procentech, od nejběžnějšího po nejvzácnější. Součet je 100.
+ *
+ * Nové druhy si vždycky vezmou díl **od svého příbuzného** a stojí v seznamu hned za ním:
+ * kláda z prken (20 → 12 + 8), dlažební kostka z kamene (24 → 14 + 10). Součty přes
+ * ostatní druhy tím zůstanou stejné, takže se už nasbíraným kostkám druh nemění — jen
+ * z části prken jsou klády a z části kamene dlažba. Jinak by se synovi přeházela
+ * celá truhla i zeď.
+ */
 export const RARITY: Record<Block, number> = {
   grass: 27,
-  stone: 24,
-  plank: 20,
+  stone: 14,
+  cobble: 10,
+  plank: 12,
+  log: 8,
   sand: 15,
   nether: 9,
   obsidian: 5,
@@ -30,7 +40,9 @@ export function spriteFor(type: Block, covered: boolean): Sprite {
 export const NAMES: Record<Sprite, string> = {
   grass: "Blok trávy",
   stone: "Kámen",
+  cobble: "Dlažební kostka",
   plank: "Dubová prkna",
+  log: "Dubová kláda",
   sand: "Písek",
   nether: "Netherrack",
   obsidian: "Obsidián",

@@ -28,6 +28,7 @@ import {
   type Face,
 } from "../lib/iso";
 import { cellKey, type Build, type BuildAction, type Cell } from "../lib/inventory";
+import { portalCells } from "../lib/portal";
 import BlockSprite from "./BlockSprite.vue";
 
 const props = defineProps<{
@@ -183,6 +184,27 @@ const blocks = computed(() => {
 
   return out.sort((a, b) => a.zi - b.zi);
 });
+
+/**
+ * Plocha nether portálu. Leží v rovině rámu, takže se kreslí stejnou maticí jako
+ * odpovídající stěna kostky — `y` je konstantní u levé stěny, `x` u pravé.
+ */
+const portal = computed(() =>
+  [...portalCells(props.build)].flatMap(([key, plane]) => {
+    const v = parseVoxel(key);
+    if (!v) return [];
+
+    const { left, top } = boxAt(v, levels.value);
+    return [{
+      key,
+      style: {
+        ...frame(left, top),
+        zIndex: String(10 + depth(v) * 2),
+        transform: faceTransform(plane === "y" ? "left" : "right", cell.value),
+      },
+    }];
+  }),
+);
 
 /** Náhled toho, kam kostka spadne — při tažení pod prstem, jinak pod kurzorem. */
 const ghost = computed(() => {
@@ -340,7 +362,32 @@ function tap(p: Press): void {
   }
 }
 
+/** Zbourání celé plochy se ptá dvakrát, ať se hotová stavba nesmaže omylem. */
+const confirming = ref(false);
+let confirmTimer: ReturnType<typeof setTimeout> | null = null;
+
+function resetConfirm(): void {
+  confirming.value = false;
+  if (confirmTimer) clearTimeout(confirmTimer);
+  confirmTimer = null;
+}
+
+function clearAll(e: MouseEvent): void {
+  if (e.detail > 0) (e.currentTarget as HTMLElement | null)?.blur();
+
+  if (!confirming.value) {
+    confirming.value = true;
+    confirmTimer = setTimeout(resetConfirm, 4000);
+    return;
+  }
+
+  resetConfirm();
+  emit("action", { kind: "clear" });
+  emit("update:wrecking", false);
+}
+
 function toggleWreck(e: MouseEvent): void {
+  resetConfirm();
   if (e.detail > 0) (e.currentTarget as HTMLElement | null)?.blur();
   emit("update:wrecking", !props.wrecking);
   if (!props.wrecking) emit("update:picked", null);
@@ -360,7 +407,10 @@ onMounted(() => {
   }
 });
 
-onBeforeUnmount(() => observer?.disconnect());
+onBeforeUnmount(() => {
+  observer?.disconnect();
+  if (confirmTimer) clearTimeout(confirmTimer);
+});
 </script>
 
 <template>
@@ -407,6 +457,10 @@ onBeforeUnmount(() => observer?.disconnect());
           />
         </template>
 
+        <div v-for="gate in portal" :key="`portal-${gate.key}`" class="portal" :style="gate.style">
+          <svg viewBox="0 0 16 16" aria-hidden="true"><use href="#portal-face" /></svg>
+        </div>
+
         <div v-if="ghost && (press?.type || picked)" class="ghost" :style="ghost">
           <BlockSprite :type="(press?.type ?? picked) as Block" />
         </div>
@@ -431,9 +485,22 @@ onBeforeUnmount(() => observer?.disconnect());
         </button>
       </div>
 
-      <button type="button" class="wreck" id="wreck" :aria-pressed="wrecking" @click="toggleWreck">
-        Bourat
-      </button>
+      <div class="tools">
+        <button type="button" class="wreck" id="wreck" :aria-pressed="wrecking" @click="toggleWreck">
+          Bourat
+        </button>
+
+        <button
+          type="button"
+          class="wreck clear"
+          id="clear"
+          :aria-pressed="confirming"
+          :disabled="!Object.keys(build).length"
+          @click="clearAll"
+        >
+          {{ confirming ? "Opravdu?" : "Zbourat vše" }}
+        </button>
+      </div>
     </div>
 
     <div

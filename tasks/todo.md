@@ -75,3 +75,10 @@ u `.page.building`.
 5. **Hlína pod kostkou** — tráva, na které něco stojí, se kreslí jako hlína; horní vrstva
    zůstává travnatá. Je to jen vzhled (`spriteFor`), ne nový druh, takže rarita, zeď ani
    truhla se nemění.
+
+6. **Dubová kláda a dlažební kostka** — nové druhy; vzácnost si berou od příbuzného
+   (kláda z prken, dlažba z kamene), aby se už nasbírané kostky nepřeházely.
+7. **Zbourat vše** — tlačítko vedle „Bourat“, ptá se dvakrát, plochu vrátí do truhly.
+8. **Krumpáč jako kurzor** — překreslený na pixel art s obrysem, ať ladí s kostkami.
+9. **Nether portál** — obsidiánový rám (nejmíň 2 × 3) se pozná sám a vnitřek se zapálí
+   fialovou plochou portálu. `lib/portal.ts` + 10 testů.

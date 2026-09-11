@@ -99,7 +99,8 @@ export function stock(banked: number, build: Build, collected = countTypes(0, ba
 export type BuildAction =
   | { kind: "place"; cell: Cell; type: Block }
   | { kind: "take"; cell: Cell }
-  | { kind: "move"; from: Cell; to: Cell };
+  | { kind: "move"; from: Cell; to: Cell }
+  | { kind: "clear" };
 
 /**
  * Provede akci a vrátí novou mapu buněk, nebo `null`, když akce nejde
@@ -111,6 +112,11 @@ export function apply(
   banked: number,
   collected = countTypes(0, banked),
 ): Build | null {
+  if (action.kind === "clear") {
+    // celá plocha se vrátí do truhly; na prázdné ploše není co bourat
+    return Object.keys(build).length ? {} : null;
+  }
+
   if (action.kind === "place") {
     if (!parseCell(action.cell) || build[action.cell]) return null;
     if ((stock(banked, build, collected)[action.type] ?? 0) <= 0) return null;

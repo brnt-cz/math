@@ -155,6 +155,27 @@ describe("inventář a plocha", () => {
     checkInvariant(build);
   });
 
+  it("zbourání celé plochy vrátí všechny kostky do truhly", () => {
+    const types = BLOCKS.slice();
+    let build: Build = {};
+
+    for (let i = 0; i < 40; i++) {
+      const next = apply(build, { kind: "place", cell: nth(i), type: types[i % types.length] as Block }, BANKED);
+      if (next) build = next;
+    }
+    expect(Object.keys(build)).toHaveLength(40);
+
+    const cleared = apply(build, { kind: "clear" }, BANKED)!;
+    expect(cleared).toEqual({});
+    checkInvariant(cleared);
+
+    const collected = countTypes(0, BANKED);
+    for (const type of BLOCKS) expect(stock(BANKED, cleared)[type], type).toBe(collected[type] ?? 0);
+
+    // na prázdné ploše není co bourat
+    expect(apply(cleared, { kind: "clear" }, BANKED)).toBeNull();
+  });
+
   it("uložený stav nezvětší zásobu nad nasbírané ani při poškození", () => {
     // 300 nasbíraných, ale ve stavbě je kostka mimo mřížku i neznámý druh
     const build = sanitizeBuild({ "1,1,1": "obsidian", "50,50,50": "obsidian", "2,2,2": "kytka" });

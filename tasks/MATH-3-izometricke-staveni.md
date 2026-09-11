@@ -92,6 +92,35 @@ Rozhoduje o tom čistá funkce `spriteFor(type, covered)`, takže se to dá otes
 prohlížeče. V truhle je to pořád blok trávy — počítání „v truhle + na ploše = nasbírané“
 se tím nedotkne.
 
+## Nové druhy kostek
+
+Přidané druhy: **dubová kláda** a **dlažební kostka**. Obojí si vzalo svůj díl vzácnosti
+**od svého příbuzného** a stojí v seznamu hned za ním — kláda z prken (20 → 12 + 8),
+dlažba z kamene (24 → 14 + 10). Součty přes ostatní druhy tím zůstaly stejné, takže se
+už nasbíraným kostkám druh nezměnil: jen z části prken jsou klády a z části kamene
+dlažba. Jinak by se synovi přeházela celá truhla i zeď. Hlídá to test, který porovnává
+starou a novou tabulku kostku po kostce.
+
+Vedlejší důsledek: osm druhů zabere v truhle víc políček než šest, takže se první truhla
+naplní dřív (~3150 kostek místo ~3250). Testy proto tu hranici počítají z rozložení
+druhů, ne z čísla v kódu.
+
+## Nether portál
+
+Obsidiánový rám se pozná sám: v jedné svislé rovině hledá `lib/portal.ts` obdélník
+prázdných buněk nejmíň 2 × 3, celý obehnaný obsidiánem. Vnitřek se pak kreslí jako
+fialová plocha portálu — leží v rovině rámu, takže se kreslí **stejnou maticí jako
+stěna kostky** (`y` konstantní → levá, `x` konstantní → pravá).
+
+Je to čistá funkce nad uloženou stavbou, nikde se nedrží žádný stav: portál se zapálí
+položením poslední kostky rámu a zhasne, jakmile se rám poruší nebo se do vnitřku něco
+postaví. Rohy rámu potřeba nejsou, stejně jako ve hře.
+
+## Zbourat vše
+
+Tlačítko vedle „Bourat“ vrátí celou plochu do truhly. Ptá se dvakrát (druhé klepnutí
+do čtyř sekund), ať se hotová stavba nesmaže omylem, a na prázdné ploše je zakázané.
+
 ## Uložená data
 
 Klíč buňky je `"x,y,z"`. Stavba ze staré ploché verze (`"x,y"`, kde `y` byla výška) se
