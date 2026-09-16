@@ -27,6 +27,7 @@ describe("uložený stav", () => {
   it("načte a uloží tvar dat beze změny", () => {
     const state: State = {
       range: 20,
+      mode: "pyramid",
       terms: 4,
       ops: { add: true, sub: true, mul: true, div: false },
       best: 9,
@@ -43,7 +44,7 @@ describe("uložený stav", () => {
 
     // a v úložišti je opravdu původní klíč a stejná pole
     expect(Object.keys(JSON.parse(store.data[KEY] as string)).sort()).toEqual(
-      ["banked", "best", "build", "buildLeft", "buildSolved", "ops", "range", "terms", "tower", "turn"],
+      ["banked", "best", "build", "buildLeft", "buildSolved", "mode", "ops", "range", "terms", "tower", "turn"],
     );
   });
 
@@ -57,6 +58,13 @@ describe("uložený stav", () => {
     expect(state.banked).toBe(3300);
     expect(state.best).toBe(12);
     expect(state.build).toEqual({ "5,2,0": "plank" });
+  });
+
+  it("volba pyramid přežije zavření, stará data ji neznají", () => {
+    expect(load(memory(JSON.stringify({ mode: "pyramid" }))).mode).toBe("pyramid");
+
+    expect(load(memory(JSON.stringify({ banked: 300 }))).mode).toBe("count");
+    expect(load(memory(JSON.stringify({ mode: "nesmysl" }))).mode).toBe("count");
   });
 
   it("zásoba času na stavění přežije zavření, stará data dostanou plnou", () => {

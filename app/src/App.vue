@@ -11,6 +11,7 @@ import { TASKS_TO_EARN, clockText } from "./lib/allowance";
 import BlockDefs from "./components/BlockDefs.vue";
 import SetupPanel from "./components/SetupPanel.vue";
 import TaskSheet from "./components/TaskSheet.vue";
+import PyramidSheet from "./components/PyramidSheet.vue";
 import Keypad from "./components/Keypad.vue";
 import RoundProgress from "./components/RoundProgress.vue";
 import RoundDone from "./components/RoundDone.vue";
@@ -146,14 +147,31 @@ onBeforeUnmount(() => {
     <div v-show="!state.building" class="wrap">
       <SetupPanel
         :range="state.range"
+        :mode="state.mode"
         :terms="state.terms"
         :ops="state.ops"
+        @update:mode="state.mode = $event; game.startRound()"
         @update:range="state.range = $event; game.startRound()"
         @update:terms="state.terms = $event; game.startRound()"
         @update:ops="state.ops = $event; game.startRound()"
       />
 
+      <PyramidSheet
+        v-if="state.mode === 'pyramid'"
+        v-show="!state.done"
+        :pyramid="state.pyramid"
+        :filled="state.filled"
+        :cursor="state.cursor"
+        :answer="state.answer"
+        :locked="state.locked"
+        :note="state.note"
+        :note-kind="state.noteKind"
+        :shake="shake"
+        @pick="game.pickCell"
+      />
+
       <TaskSheet
+        v-else
         v-show="!state.done"
         :task="state.task"
         :answer="state.answer"

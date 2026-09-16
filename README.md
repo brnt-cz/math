@@ -97,12 +97,13 @@ fragment nemůže odkazovat na lokální soubory.
         wall.ts            mřížka zdi: řady/sloupce, skokové zmenšení s hysterezí
         inventory.ts       stavění: zásoba = nasbírané − na ploše, položit/vzít/přesunout
         allowance.ts       čas na stavění: 10 minut, 30 příkladů na další zásobu
+        pyramid.ts         počítací pyramidy: stavba v rozsahu a řešitel propagací
         portal.ts          nether portál: rám z obsidiánu se pozná sám
         iso.ts             izometrie: projekce, hloubka, otočení plochy
         storage.ts         localStorage včetně migrace starých formátů
       src/composables/     useGame (stav a kolo příkladů), useBuildClock (odpočet
                            času na stavění), useSideLayout, usePointerTip
-      src/components/      SetupPanel, TaskSheet, Keypad, RoundProgress, RoundDone,
+      src/components/      SetupPanel, TaskSheet, PyramidSheet, Keypad, RoundProgress, RoundDone,
                            BrickWall, ChestColumn, BuildArea, BlockSprite, BlockDefs
       src/styles/app.css   CSS přenesené doslova z první verze
       src/assets/fonts/    woff2 (Vite je hashuje)
@@ -112,7 +113,7 @@ fragment nemůže odkazovat na lokální soubory.
     scripts/cube.mjs       dřevěná kostka pro faviconu i ikony PWA
     scripts/icon.mjs       vypíše SVG jedné ikony PWA
     scripts/postbuild.mjs  favicona, sw.js s precache, artifact
-    tests/                 vitest — 84 testů logiky
+    tests/                 vitest — 95 testů logiky
     tasks/                 plány, průběh a lekce
 
 ## Sestavení a nasazení

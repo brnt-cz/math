@@ -14,8 +14,12 @@ import { sanitizeBuild, type Build } from "./inventory";
 
 export const KEY = "matika-do-dvaceti";
 
+/** Co se zrovna trénuje: příklady, nebo pyramidy. */
+export type Mode = "count" | "pyramid";
+
 export type State = {
   range: number;
+  mode: Mode;
   terms: number;
   ops: Ops;
   best: number;
@@ -36,6 +40,7 @@ export type StorageLike = {
 export function defaultState(): State {
   return {
     range: 10,
+    mode: "count",
     terms: 2,
     ops: { add: true, sub: true, mul: false, div: false },
     best: 0,
@@ -79,6 +84,7 @@ export function load(storage: StorageLike): State {
   }
 
   if (saved.range === 10 || saved.range === 20) state.range = saved.range;
+  if (saved.mode === "pyramid") state.mode = "pyramid";
 
   const terms = whole(saved.terms);
   if (terms >= 2 && terms <= 4) state.terms = terms;
@@ -104,6 +110,7 @@ export function save(storage: StorageLike, state: State): void {
       KEY,
       JSON.stringify({
         range: state.range,
+        mode: state.mode,
         terms: state.terms,
         ops: state.ops,
         best: state.best,

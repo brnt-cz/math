@@ -1,10 +1,12 @@
 <!-- Nastavení: rozsah, počet čísel, znaménka. -->
 <script setup lang="ts">
 import { OP_KEYS, type OpKey, type Ops } from "../lib/generator";
+import type { Mode } from "../lib/storage";
 
-const props = defineProps<{ range: number; terms: number; ops: Ops }>();
+const props = defineProps<{ range: number; mode: Mode; terms: number; ops: Ops }>();
 const emit = defineEmits<{
   (e: "update:range", value: number): void;
+  (e: "update:mode", value: Mode): void;
   (e: "update:terms", value: number): void;
   (e: "update:ops", value: Ops): void;
 }>();
@@ -42,16 +44,25 @@ function toggleOp(key: OpKey, e: Event): void {
           :key="value"
           type="button"
           :data-v="value"
-          :aria-pressed="range === value"
-          @click="unfocus($event); emit('update:range', value)"
+          :aria-pressed="mode === 'count' && range === value"
+          @click="unfocus($event); emit('update:mode', 'count'); emit('update:range', value)"
         >
           do {{ value }}
+        </button>
+
+        <button
+          type="button"
+          data-v="pyramid"
+          :aria-pressed="mode === 'pyramid'"
+          @click="unfocus($event); emit('update:mode', 'pyramid')"
+        >
+          pyramidy
         </button>
       </div>
     </div>
 
     <div class="row">
-      <span class="lab" id="lab-terms">Počet čísel</span>
+      <span class="lab" id="lab-terms">{{ mode === "pyramid" ? "Šířka pyramidy" : "Počet čísel" }}</span>
       <div class="seg" role="group" aria-labelledby="lab-terms" id="seg-terms">
         <button
           v-for="value in [2, 3, 4]"
@@ -66,7 +77,9 @@ function toggleOp(key: OpKey, e: Event): void {
       </div>
     </div>
 
-    <div class="row">
+    <!-- V pyramidách se jen sčítá, takže znaménka zmizí — a o jejich místo vyroste
+         papír, takže klávesnice zůstane, kde je. -->
+    <div class="row ops-row" v-if="mode === 'count'">
       <span class="lab" id="lab-ops">Znaménka</span>
       <div class="ops" role="group" aria-labelledby="lab-ops" id="seg-ops">
         <label v-for="key in OP_KEYS" :key="key" class="chip">
