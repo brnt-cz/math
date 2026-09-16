@@ -51,15 +51,23 @@ poskočí; musí se jen zneviditelnit.
 základny ani rozsahu nebyla vidět, dokud ji syn nedopočítal. Nové kolo teď vždycky staví
 novou pyramidu.
 
-## Aby se nehýbala klávesnice
+## Aby se nic nehýbalo
 
-Pyramida je vyšší než jeden příklad, takže papír má **stálou výšku danou tou nejvyšší
-pyramidou** (17 rem) a obsah je na střed; v počítání má příklad kolem sebe víc papíru.
-Znaménka v pyramidách nemají co říct, ale **nemizí** — jen zašednou a nejdou zapnout,
-protože jinak by se panel zkrátil a klávesnice by poskočila.
+Pyramida je vyšší než jeden příklad, takže v pyramidách **zmizí pruh znamének** (jen se
+sčítá) a papír o jeho místo vyroste — klávesnice díky tomu zůstane na stejném místě
+a ve stejné velikosti (ověřeno: 428 px a 268 px v obou režimech při všech šířkách základny).
 
-Cihly jsou co největší a zmenšují se podle šířky základny (2,25 / 2 / 1,625 rem). Na šířku
-obrazovky se řídí výškou okna (`cqh`), aby appka zůstala bez posuvníku.
+**Poznámka visí na spodku listu.** V toku posouvala při zalomení na dva řádky všechno nad
+sebou i klávesnici pod papírem; dělo se to i v počítání, jen si toho nikdo nevšiml.
+
+Na šířku má klávesnice **pevný díl výšky okna**. Dřív se dělila zbytkem, takže měnila
+velikost podle toho, kolik místa si vzal papír — a při přepnutí na pyramidy poskočila.
+
+Cihly se počítají **z výšky papíru** (`container-type: size` a `calc` nad `cqh`), aby byly
+co největší a přitom se vždy vešly: dvě patra velká, čtyři menší. Pravidla pro papír musí
+být **až za všemi bloky pro orientaci** — jinak mu přebijí odsazení, pyramida vyplní
+i místo pro poznámku a vleze do ní. (Media query nezvyšuje specificitu, rozhoduje pořadí;
+projekt na to narazil už potřetí.)
 
 ## Ověřeno
 

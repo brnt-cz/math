@@ -846,23 +846,16 @@
     padding: .25rem 0 .5rem;
     font-family: var(--display);
     font-weight: 800;
-    font-size: 2.25rem;
   }
 
-  /* širší základna má víc pater, tak jsou cihly o něco menší — ale pořád velké */
-  .pyramid[data-base="3"] { font-size: 1.875rem; }
-  .pyramid[data-base="4"] { font-size: 1.375rem; }
+  /* Cihla je tak velká, aby patra přesně zaplnila papír: od jeho výšky se odečte,
+     co zabírají okraje a mezery, a zbytek se rozdělí mezi patra (výška cihly je
+     1,8 em). Širší základna má víc pater, takže menší cihly. */
+  .pyramid { font-size: clamp(.5625rem, calc((100cqh - 26px) / 3.6), 3rem); }
+  .pyramid[data-base="3"] { font-size: clamp(.5625rem, calc((100cqh - 32px) / 5.4), 2.75rem); }
+  .pyramid[data-base="4"] { font-size: clamp(.5625rem, calc((100cqh - 38px) / 7.2), 2.25rem); }
 
   /* pyramida potřebuje výšku, tak si na papíře ubere z okrajů a z místa pod poznámkou */
-  .pyramid-sheet {
-    /* papír si vezme přesně to, co uvolnila zmizelá znaménka */
-    min-height: calc(9.25rem + var(--ops-row));
-    padding-top: .75rem;
-    padding-bottom: 2.5rem;        /* místo pro poznámku dole */
-    /* bez širokého levého okraje pro rýhu papíru, ať pyramida stojí na středu listu */
-    padding-left: .625rem;
-  }
-
   /* Poznámka visí na spodku listu. V toku by při zalomení na dva řádky posunula
      všechno nad sebou i klávesnici pod papírem — dělo se to po každém vyhodnocení. */
   .sheet .note {
@@ -1099,9 +1092,6 @@
     .chip { padding: .1875rem .125rem; }
     .chip span { font-size: clamp(1.25rem, 5.5cqh, 2rem); }
 
-    /* na šířku výšku určuje okno, ne obsah: uvolněné místo si papír vezme sám */
-    .pyramid-sheet { min-height: 0; }
-
     .sheet {
       flex: 1 1 auto;
       min-height: 0;
@@ -1111,16 +1101,15 @@
       padding: .75rem 1rem 2.25rem 3.25rem;
     }
 
-    /* cihly se řídí výškou okna, aby pyramida neukrojila z klávesnice */
-    .pyramid { font-size: clamp(.875rem, 13cqh, 2.25rem); }
-    .pyramid[data-base="3"] { font-size: clamp(.8125rem, 9cqh, 1.6875rem); }
-    .pyramid[data-base="4"] { font-size: clamp(.75rem, 6.8cqh, 1.1875rem); }
+
 
     .sheet::before { left: 2.5rem; }
     .note { margin-top: .5rem; min-height: 1.25rem; font-size: .9375rem; }
 
+    /* Klávesnice má pevný díl výšky okna. Když se dělila zbytkem, měnila velikost
+       podle toho, kolik místa si vzal papír — a při přepnutí na pyramidy poskočila. */
     .pad {
-      flex: 2 1 auto;
+      flex: 0 0 42%;
       min-height: 0;
       grid-auto-rows: minmax(0, 1fr);
       gap: .4375rem;
@@ -1141,6 +1130,10 @@
   /* Nízké okno na šířku (telefon na šířku, malé okno na notebooku): nastavení
      se srovná do jednoho řádku, ať zbyde výška na příklad a klávesnici. */
   @media (orientation: landscape) and (max-height: 34rem) {
+    /* Nízké okno: klávesnice si ukrojí míň a papír si ubere z okrajů, jinak se
+       čtyřpatrová pyramida nemá kam vejít a lezla by do poznámky. */
+    .pad { flex: 0 0 32%; }
+
     .page { padding-top: .625rem; padding-bottom: .625rem; row-gap: .5rem; }
     h1 { font-size: 1.125rem; }
 
@@ -1181,3 +1174,30 @@
 
   .page.building .build { justify-content: center; }
 
+  /* ---------- papír s pyramidou ----------
+
+     Musí být až za všemi bloky pro orientaci, jinak mu přebijí odsazení (media query
+     nezvyšuje specificitu, rozhoduje pořadí). A na odsazení tu záleží: spodní okraj
+     je místo pro poznámku a `container-type: size` znamená, že se podle obsahové části
+     papíru počítá velikost cihel. Když se okraj přebije, pyramida vyplní i místo
+     poznámky a vleze do ní. */
+
+  .pyramid-sheet {
+    /* papír si vezme přesně to, co uvolnila zmizelá znaménka */
+    min-height: calc(9.25rem + var(--ops-row));
+    container-type: size;
+    padding: .75rem .625rem 2.5rem;
+  }
+
+  @media (min-width: 30rem) and (orientation: landscape) {
+    /* na šířku výšku určuje okno, ne obsah */
+    .pyramid-sheet {
+      min-height: 0;
+      padding: .75rem 1rem 2.25rem;
+    }
+  }
+
+  @media (orientation: landscape) and (max-height: 34rem) {
+    .pyramid-sheet { padding: .4375rem .625rem 1.5rem; }
+    .pyramid-sheet .note { bottom: .25rem; }
+  }
