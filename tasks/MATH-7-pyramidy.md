@@ -51,6 +51,16 @@ poskočí; musí se jen zneviditelnit.
 základny ani rozsahu nebyla vidět, dokud ji syn nedopočítal. Nové kolo teď vždycky staví
 novou pyramidu.
 
+## Čáry mezi patry
+
+Mezi cihlami vedou čáry `/` a `\` ke dvěma cihlám pod sebou, aby bylo vidět, odkud se
+součet bere. Jsou to dva otočené pseudoprvky u každé cihly a jejich délka i sklon plynou
+z geometrie: vodorovně je to `(šířka cihly + mezera) / 2`, svisle mezera mezi patry.
+Proto jsou rozměry cihel v `em` — při každé velikosti písma to pak sedí samo.
+
+Čáry mají `z-index: -1`, takže končí **pod** cihlou, ne na ní. Spodní patro je nemá,
+pod ním už nic není.
+
 ## Aby se nic nehýbalo
 
 Pyramida je vyšší než jeden příklad, takže v pyramidách **zmizí pruh znamének** (jen se
@@ -62,6 +72,9 @@ sebou i klávesnici pod papírem; dělo se to i v počítání, jen si toho nikd
 
 Na šířku má klávesnice **pevný díl výšky okna**. Dřív se dělila zbytkem, takže měnila
 velikost podle toho, kolik místa si vzal papír — a při přepnutí na pyramidy poskočila.
+
+Na velké obrazovce mají cihly **stejnou velikost při každé šířce základny** — tu, která se
+vejde i na čtyři patra. Přepínání šířky pak nemění velikost písmen, jen půdorys pyramidy.
 
 Cihly se počítají **z výšky papíru** (`container-type: size` a `calc` nad `cqh`), aby byly
 co největší a přitom se vždy vešly: dvě patra velká, čtyři menší. Pravidla pro papír musí
