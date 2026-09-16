@@ -146,3 +146,22 @@ znaménko — a žádný z testů na to nesahal.
 Poučení: u čehokoli, co má na obrazovce **směr** (otáčení, posun, řazení), napsat test,
 který ten směr pojmenuje — „zadní kout je po kroku doprava vpravo“. Testy na invarianty
 (round-trip, bijekce) takovou chybu nikdy nenajdou.
+
+## Globální CSS je jeden jmenný prostor — nové třídy si dávat předponu
+
+**2026-09-16, MATH-7.** Cihla pyramidy dostala třídu `done` a panel nastavení třídu
+`pyramid`. Obojí už v appce něco znamenalo: `.done` je panel s výsledkem kola
+(`display: grid`, padding) a `.pyramid` kreslení pyramidy (svislý flex). Číslo v cihle
+proto po odeslání odpovědi poskočilo o 13,8 px dolů a přepínače v nastavení se zmáčkly.
+
+Ani jedno nevypadalo jako kolize — vypadalo to jako chyba rozvržení. Poučení: v jednom
+velkém stylopisu dávat stavovým třídám předponu (`is-done`, `is-here`) a před přidáním
+nové třídy si ji **vygrepovat**. Je to ta samá past jako dvě funkce stejného jména v JS
+(viz výš), jen v CSS.
+
+## Co se schovává kvůli vzhledu, ať si nechá místo
+
+Tamtéž dvakrát: kurzor v cihle schovaný přes `display: none` zkrátil řádek a číslo
+poskočilo; pruh znamének schovaný v pyramidách zkrátil panel a poskočila klávesnice.
+Obojí spravilo `visibility: hidden`, respektive ponechání prvku na místě zašedlého.
+Když se něco schovává jen proto, že v daném režimu nedává smysl, má si to místo nechat.

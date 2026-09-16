@@ -1,103 +1,41 @@
-# MATH-3: Izometrické stavění
+# MATH-7: Počítací pyramidy (Hejného metoda)
 
-Stavění z MATH-1 kreslí kostky do jedné svislé vrstvy (zeď zpředu). Cílem je skutečná
-izometrie: kosočtverečná podlaha, hloubka i výška.
+Sčítací pyramida: řada cihel dole, každá cihla nad nimi je součet dvou pod sebou.
+Prázdné cihly jsou **různě** — když chybí cihla dole a nad ní je součet, dítě musí
+odčítat, aniž by kdy vidělo znaménko minus. To je na té metodě to hlavní.
 
-## Geometrie
+## Rozhodnutí (od zadavatele)
 
-SVG symboly kostek **už izometrické kostky jsou** — `viewBox 0 0 32 32`, tři stěny
-přes `matrix(1,.5,-1,.5,16,0)` (horní), `matrix(1,.5,0,1,0,8)` (levá) a
-`matrix(1,-.5,0,1,16,16)` (pravá). Hrana kostky je 16 jednotek, obal je čtverec 32×32.
-Grafika se tedy nemění vůbec, mění se jen rozmístění:
-
-    obal kostky (x, y, z):  left = (x − y + DEPTH − 1) · s/2
-                            top  = (x + y) · s/4 − z · s/2 + (LEVELS − 1) · s/2
-
-Směr pohledu je (1,1,1) — dva body splynou, právě když se liší o násobek (1,1,1).
-Větší `x + y + z` je proto blíž k divákovi: **kreslit vzestupně podle součtu**.
+| Otázka | Rozhodnutí |
+|---|---|
+| Velikost základny | Přepínač **POČET ČÍSEL 2 3 4**, který už tam je |
+| Prázdné cihly | **Různě** — nahoře i dole |
+| Kam to patří | Třetí volba u „POČÍTÁME“: `do 10 · do 20 · pyramidy` |
 
 ## Plán
 
-- [x] Založit task MATH-3 v TODOcku a větev
-- [x] `lib/iso.ts` — čisté funkce: klíč buňky, projekce, hloubka, rozměr scény, stěny
-- [x] `lib/inventory.ts` — buňky 3D, převod staré ploché stavby
-- [x] Testy na `iso.ts` a doplnit testy inventáře
-- [x] `BuildArea.vue` — podlaha, kostky podle hloubky, terče na stěnách, tažení
-- [x] CSS pro scénu
-- [x] Ověřit v prohlížeči na telefonu, tabletu i desktopu + přesnost klepnutí
-- [x] `npm test`, `npm run build`, PR
+- [x] `lib/pyramid.ts` — stavba pyramidy a řešitel propagací, čisté funkce
+- [x] Testy: rozsah, součty sedí, vždy jednoznačně řešitelné, díry padají nahoru i dolů
+- [x] `storage.ts` — pamatovat si volbu (do 10 / do 20 / pyramidy)
+- [x] `useGame` — jedna doplněná cihla = jeden příklad (kostka, tečka v kole, čas na stavění)
+- [x] `SetupPanel` — třetí volba, v režimu pyramid schovat znaménka (jsou jen na sčítání)
+- [x] `PyramidSheet.vue` — pyramida na listu papíru, klepnutí vybírá cihlu, klávesnice píše
+- [x] Ověřit v prohlížeči na telefonu, tabletu i desktopu
 
-## Ovládání
+## Co musí platit
 
-Terč pro prst je **samotná stěna**: kosočtverec pro horní, kosodélníky pro boční.
-Co je vidět, na to se dá klepnout — a naopak, co kostka zakryje, patří jí.
-
-| klepnutí | akce |
-| --- | --- |
-| podlaha | kostka na zem `(x, y, 0)` |
-| horní stěna | kostka nad ni `(x, y, z+1)` |
-| pravá stěna | kostka před ni `(x+1, y, z)` |
-| levá stěna | kostka před ni `(x, y+1, z)` |
-
-Boční stěny umí převisy a oblouky, takže se nemusí hlídat podpora zespodu — nová
-kostka vždy na něčem navazuje. Kostka se dá sebrat i zpod stavby, stejně jako
-v Minecraftu.
+- **Vždy jednoznačně řešitelná.** Díry se nesmí rozhodit tak, aby pyramida měla víc
+  řešení nebo žádné. Hlídá to řešitel propagací: doplň součet, když znáš obě cihly pod
+  ním, a doplň cihlu, když znáš součet a sourozence. Když propagace dojde na všechno,
+  je řešení právě jedno — a zároveň je to pořadí, ve kterém se to dá vyřešit úvahou,
+  takže se dítě nikdy nezasekne.
+- **Celá pyramida v rozsahu.** Při základně 4 roste vrchol jako `a + 3b + 3c + d`, takže
+  se musí stavět odspodu a zkoušet, dokud se všechno nevejde do desítky/dvacítky.
+- **Jedna doplněná cihla = jeden příklad.** Kostka do zdi, tečka v kole i odemykání
+  stavění se počítají stejně jako dnes, takže se nerozhodí ekonomika truhly.
 
 ## Výsledek
 
-Hotovo, podrobně v `tasks/MATH-3-izometricke-staveni.md`.
-
-- `lib/iso.ts` — projekce, hloubka, rozměr scény a matice stěn jako čisté funkce, 8 testů.
-- Mřížka 16 × 16 × 8, klíč buňky `"x,y,z"`, stará plochá stavba se převede.
-- Kostka má na telefonu 20 px, na tabletu a desktopu 40 px.
-- Ověřeno v prohlížeči na 1280×900, 810×1080, 390×844 a 844×390 (dev i produkční build):
-  klepnutí trefilo pokaždé očekávanou buňku, tažení i opakovaný přesun fungují,
-  počítání a zeď beze změny, v konzoli nic.
-
-### Co stojí za zaznamenání
-
-Přebytečnou výšku dostávaly v mřížce **všechny** řádky `auto`, ne jen ta s plochou —
-hlavička se roztáhla a plocha zůstala malá. Řeší to `grid-template-rows: auto minmax(0, 1fr)`
-u `.page.building`.
-
-## Připomínky ze zkoušení (druhé kolo)
-
-1. **Plocha 16 × 16 a menší kostky** — hotovo.
-2. **Klepnutím se hýbala kostka, na kterou se kleplo** — tažení se teď pozná až po ujetí
-   8 px (`SLOP`), do té doby je to klepnutí.
-3. **Viditelnost** — kreslení bylo v pořádku (`z-index` = hloubka), chyba byla v míření:
-   políčko podlahy přímo za kostkou je celé zakryté její horní stěnou, takže klepnutí
-   „za kostku“ padlo na tu horní stěnu a kostka se postavila nahoru. `(x, y, z+1)`
-   a `(x−1, y−1, z)` se navíc kreslí na to samé místo, takže to ani nebylo poznat.
-   Přidané zvýraznění kostky pod kurzorem a náhled cíle to prozradí předem.
-4. **Kurzor pro bourání** — krumpáč (SVG v `cursor`), špička hlavy je bod, kterým se míří.
-
-5. **Hlína pod kostkou** — tráva, na které něco stojí, se kreslí jako hlína; horní vrstva
-   zůstává travnatá. Je to jen vzhled (`spriteFor`), ne nový druh, takže rarita, zeď ani
-   truhla se nemění.
-
-6. **Dubová kláda a dlažební kostka** — nové druhy; vzácnost si berou od příbuzného
-   (kláda z prken, dlažba z kamene), aby se už nasbírané kostky nepřeházely.
-7. **Zbourat vše** — tlačítko vedle „Bourat“, ptá se dvakrát, plochu vrátí do truhly.
-8. **Krumpáč jako kurzor** — překreslený na pixel art s obrysem, ať ladí s kostkami.
-9. **Nether portál** — obsidiánový rám (nejmíň 2 × 3) se pozná sám a vnitřek se zapálí
-   fialovou plochou portálu. `lib/portal.ts` + 10 testů.
-10. **Pravé tlačítko bourá** — bez přepínání režimu; na dotyku zůstává režim „Bourat“.
-
-## MATH-4: rotace plochy
-
-Hotovo, podrobně v `tasks/MATH-4-rotace-plochy.md`.
-
-- `toView` / `toWorld` v `lib/iso.ts`; stavba zůstává ve světě, kreslení běží v pohledu.
-- Dvě tlačítka `↺ ↻`, otočení se ukládá a přežije zavření appky.
-- Zrádné bylo: směr otáčení (fixuje test), směr u bočních stěn a prohození rovin portálu.
-
-## MATH-6: časový limit na stavění
-
-Hotovo, podrobně v `tasks/MATH-6-cas-na-staveni.md`.
-
-- `lib/allowance.ts` — čisté účtování, uplynulé sekundy jako parametr (testy bez čekání).
-- `composables/useBuildClock.ts` — jediné místo s hodinami; rozdíly časových značek,
-  pauza na pozadí.
-- 10 minut stavění, 30 správně spočítaných příkladů na další zásobu, čas se nedá
-  střádat dopředu.
+Hotovo, podrobně v `tasks/MATH-7-pyramidy.md`. Kromě zadání padly dvě kolize jmen tříd
+v CSS (`done`, `pyramid`), kvůli kterým poskakovalo číslo v cihle a rozsypal se panel,
+a chyba, že přepnutí šířky se projevilo až po dopočítání rozdělané pyramidy.

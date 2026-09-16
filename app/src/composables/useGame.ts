@@ -5,6 +5,7 @@
 
 import { computed, reactive, watch } from "vue";
 import { makeTask, type Task } from "../lib/generator";
+import { blankCells, makePyramid, valueAt, type Cell, type Pyramid } from "../lib/pyramid";
 import { BANK_SIZE, chestList, firstChestFull } from "../lib/chest";
 import { countTypes, type Block } from "../lib/blocks";
 import { apply, stock, type BuildAction } from "../lib/inventory";
@@ -47,6 +48,11 @@ export function useGame() {
     noteKind: "" as NoteKind,
     results: [] as Mark[],
     done: false,
+    /** rozdělaná pyramida a co už je v ní doplněné */
+    pyramid: null as Pyramid | null,
+    filled: {} as Record<string, number>,
+    /** cihla, do které se právě píše */
+    cursor: null as Cell | null,
     /** režim stavění */
     building: false,
     picked: null as Block | null,
@@ -58,6 +64,7 @@ export function useGame() {
   watch(
     () => [
       state.range,
+      state.mode,
       state.terms,
       state.ops,
       state.best,
@@ -70,6 +77,7 @@ export function useGame() {
     () => {
       save(store, {
         range: state.range,
+        mode: state.mode,
         terms: state.terms,
         ops: state.ops,
         best: state.best,
@@ -131,6 +139,31 @@ export function useGame() {
     }
   }
 
+  /* ---------- pyramidy ---------- */
+
+  const cellKey = (cell: Cell): string => `${cell.row},${cell.at}`;
+
+  /** Prázdné cihly, které ještě nejsou doplněné — v pořadí, jak se dají vyřešit úvahou. */
+  const openCells = computed(() =>
+    state.pyramid ? blankCells(state.pyramid).filter((c) => !(cellKey(c) in state.filled)) : [],
+  );
+
+  function newPyramid(): void {
+    state.pyramid = makePyramid({ range: state.range, base: state.terms });
+    state.filled = {};
+    state.cursor = openCells.value[0] ?? null;
+  }
+
+  /** Klepnutí na cihlu: psát jde jen do těch, co se doplňují. */
+  function pickCell(cell: Cell): void {
+    if (!openCells.value.some((c) => c.row === cell.row && c.at === cell.at)) return;
+
+    state.cursor = cell;
+    state.answer = "";
+    state.locked = false;
+    state.tries = 0;
+  }
+
   /* ---------- kolo příkladů ---------- */
 
   function nextTask(): void {
@@ -139,10 +172,24 @@ export function useGame() {
     state.answer = "";
     state.note = "";
     state.noteKind = "";
+
+    if (state.mode === "pyramid") {
+      // rozdělaná pyramida pokračuje další cihlou, hotová se vymění za novou
+      if (!state.pyramid || !openCells.value.length) newPyramid();
+      else state.cursor = openCells.value[0] ?? null;
+      return;
+    }
+
     state.task = makeTask({ range: state.range, terms: state.terms, ops: state.ops });
   }
 
   function startRound(): void {
+    // nové kolo staví novou pyramidu: jinak by se změna šířky ani rozsahu
+    // neprojevila, dokud by syn nedoplnil tu rozdělanou
+    state.pyramid = null;
+    state.filled = {};
+    state.cursor = null;
+
     state.results = [];
     state.streak = 0;
     state.roundBest = 0;
@@ -189,17 +236,22 @@ export function useGame() {
     setTimeout(nextTask, mark === "first" ? 550 : 800);
   }
 
-  function check(): void {
-    if (state.locked || !state.task) return;
+  /**
+   * Vyhodnocení jedné odpovědi. Sdílené pro příklad i pro cihlu pyramidy — obojí je
+   * jedno číslo, jedna kostka do zdi a jedna tečka v kole.
+   */
+  function judge(expected: number, onRight: () => void): void {
+    if (state.locked) return;
 
     if (state.answer.trim() === "") {
-      note("Napiš výsledek.");
+      note(state.mode === "pyramid" ? "Napiš číslo do cihly." : "Napiš výsledek.");
       return;
     }
 
-    if (parseInt(state.answer, 10) === state.task.result) {
+    if (parseInt(state.answer, 10) === expected) {
       state.locked = true;
       state.allowance = solvedTask(state.allowance);
+      onRight();
       note((state.tries === 0 ? "Správně!" : "Správně, teď to je!") + " Kostka nahoru.", "ok");
 
       if (addBrick()) {
@@ -234,10 +286,26 @@ export function useGame() {
     note(
       state.tries < HINT_AFTER
         ? "Ještě jednou, zkus to znovu."
-        : `Výsledek je ${state.task.result} — napiš ho.`,
+        : state.mode === "pyramid"
+          ? `Do cihly patří ${expected} — napiš to.`
+          : `Výsledek je ${expected} — napiš ho.`,
       "bad",
     );
     state.answer = "";
+  }
+
+  function check(): void {
+    if (state.mode === "pyramid") {
+      const cell = state.cursor;
+      if (!state.pyramid || !cell) return;
+
+      const value = valueAt(state.pyramid, cell);
+      judge(value, () => void (state.filled[cellKey(cell)] = value));
+      return;
+    }
+
+    if (!state.task) return;
+    judge(state.task.result, () => {});
   }
 
   /** Souhrn kola pro výsledkovou obrazovku. */
@@ -265,6 +333,8 @@ export function useGame() {
     chests,
     collected,
     inStock,
+    openCells,
+    pickCell,
     buildUnlocked,
     buildReady,
     tasksToBuild,

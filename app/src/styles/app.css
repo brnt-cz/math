@@ -365,7 +365,10 @@
     grid-template-columns: 1fr 1fr;
   }
 
-  .setup .row:last-child { grid-column: 1 / -1; }
+  .setup .row.ops-row { grid-column: 1 / -1; }
+
+  /* o kolik se panel zkrátí, když v pyramidách zmizí znaménka */
+  .page { --ops-row: 5.875rem; }
 
   .lab {
     display: block;
@@ -387,8 +390,10 @@
   }
 
   .seg button {
-    flex: 1 1 0;
+    /* obsah si říká o šířku sám: „pyramidy“ je delší než „do 10“ */
+    flex: 1 1 auto;
     min-width: 0;
+    white-space: nowrap;
     appearance: none;
     border: 0;
     border-radius: 7px;
@@ -714,8 +719,15 @@
 
   /* ---------- list papíru ---------- */
 
+  /* Výška papíru je stálá, ať klávesnice nepodskakuje podle toho, jak dlouhý je
+     zrovna příklad. V pyramidách zmizí pruh znamének a papír o jeho místo vyroste
+     (--ops-row), takže se pod ním nic nehne. */
   .sheet {
     position: relative;
+    min-height: 9.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     background-color: var(--paper);
     background-image:
       repeating-linear-gradient(to right, var(--paper-line) 0 1px, transparent 1px 26px),
@@ -724,7 +736,7 @@
     border: 1px solid var(--line);
     border-radius: 14px;
     box-shadow: var(--shadow);
-    padding: 1.5rem .625rem 1.25rem 2.125rem;
+    padding: 1.5rem .625rem 2.5rem 2.125rem;
     overflow: auto hidden;
     container-type: inline-size;
   }
@@ -819,6 +831,121 @@
 
   @media (prefers-reduced-motion: reduce) {
     .sheet.is-shake { animation: none; }
+  }
+
+  /* ---------- počítací pyramida ---------- */
+
+  /* Cihly se kreslí odshora dolů a každá je součet dvou pod sebou, takže patra musí
+     být na střed a stejně široká. Prázdná cihla vypadá jako rámeček na výsledek
+     v příkladu — je to pro syna to samé: napiš sem číslo. */
+  .pyramid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .375rem;
+    padding: .25rem 0 .5rem;
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 2.25rem;
+  }
+
+  /* širší základna má víc pater, tak jsou cihly o něco menší — ale pořád velké */
+  .pyramid[data-base="3"] { font-size: 1.875rem; }
+  .pyramid[data-base="4"] { font-size: 1.375rem; }
+
+  /* pyramida potřebuje výšku, tak si na papíře ubere z okrajů a z místa pod poznámkou */
+  .pyramid-sheet {
+    /* papír si vezme přesně to, co uvolnila zmizelá znaménka */
+    min-height: calc(9.25rem + var(--ops-row));
+    padding-top: .75rem;
+    padding-bottom: 2.5rem;        /* místo pro poznámku dole */
+    /* bez širokého levého okraje pro rýhu papíru, ať pyramida stojí na středu listu */
+    padding-left: .625rem;
+  }
+
+  /* Poznámka visí na spodku listu. V toku by při zalomení na dva řádky posunula
+     všechno nad sebou i klávesnici pod papírem — dělo se to po každém vyhodnocení. */
+  .sheet .note {
+    position: absolute;
+    left: .625rem;
+    right: .625rem;
+    bottom: .5rem;
+    margin: 0;
+    min-height: 0;
+  }
+
+  .bricks {
+    display: flex;
+    gap: .375rem;
+  }
+
+  /* Třídy cihel mají předponu `is-`: `.done` už v appce znamená panel s výsledkem kola
+     a `.pyramid` kreslení pyramidy — obojí se s nimi potkalo a rozhodilo cihly.
+
+     Obrys má každá cihla, i zadaná — jinak se z pyramidy stanou rozházená čísla
+     a není vidět, že každá cihla stojí na dvou pod sebou. */
+  .brick-cell {
+    appearance: none;
+    width: 2.6em;
+    height: 1.8em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--line);
+    border-radius: .2em;
+    background: var(--card);
+    color: var(--ink);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    padding: 0;
+    cursor: default;
+    box-shadow: var(--shadow);
+  }
+
+  /* doplněná cihla se obarví, ať je vidět, kam až syn došel */
+  .brick-cell.is-done {
+    border-color: var(--ok);
+    color: var(--ok);
+  }
+
+  .brick-cell.is-blank {
+    border-color: var(--accent);
+    border-style: dashed;
+    cursor: pointer;
+  }
+
+  .brick-cell.is-here { border-style: solid; }
+  .brick-cell:focus-visible { outline: 3px solid var(--accent-soft); outline-offset: 2px; }
+
+  /* kurzor jako v rámečku na výsledek: dokud je prázdno, bliká před otazníkem */
+  .brick-cell.is-here span:empty::after { content: "?"; color: var(--line); }
+
+  .brick-cell.is-here span:empty::before,
+  .brick-cell.is-here span:not(:empty)::after {
+    content: "";
+    display: inline-block;
+    width: .09em;
+    height: .7em;
+    vertical-align: -.085em;
+    background: var(--accent);
+    animation: caret 1.1s step-end infinite;
+  }
+
+  .brick-cell.is-here span:empty::before { margin-right: .08em; }
+  .brick-cell.is-here span:not(:empty)::after { margin-left: .08em; }
+
+  /* Kurzor se jen zneviditelní. Kdyby zmizel z toku, zkrátí se řádek a číslo
+     v cihle poskočí dolů — přesně to se dělo po odeslání správné odpovědi. */
+  .brick-cell.is-here span.is-locked::before,
+  .brick-cell.is-here span.is-locked::after { visibility: hidden; }
+
+  .sheet.is-ok .brick-cell.is-here { border-style: solid; border-color: var(--ok); color: var(--ok); }
+  .sheet.is-bad .brick-cell.is-here { border-style: solid; border-color: var(--bad); color: var(--bad); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .brick-cell span::before,
+    .brick-cell span::after { animation: none; }
   }
 
   .note {
@@ -972,13 +1099,22 @@
     .chip { padding: .1875rem .125rem; }
     .chip span { font-size: clamp(1.25rem, 5.5cqh, 2rem); }
 
+    /* na šířku výšku určuje okno, ne obsah: uvolněné místo si papír vezme sám */
+    .pyramid-sheet { min-height: 0; }
+
     .sheet {
       flex: 1 1 auto;
+      min-height: 0;
       display: flex;
       flex-direction: column;
       justify-content: center;
-      padding: .75rem 1rem .75rem 3.25rem;
+      padding: .75rem 1rem 2.25rem 3.25rem;
     }
+
+    /* cihly se řídí výškou okna, aby pyramida neukrojila z klávesnice */
+    .pyramid { font-size: clamp(.875rem, 13cqh, 2.25rem); }
+    .pyramid[data-base="3"] { font-size: clamp(.8125rem, 9cqh, 1.6875rem); }
+    .pyramid[data-base="4"] { font-size: clamp(.75rem, 6.8cqh, 1.1875rem); }
 
     .sheet::before { left: 2.5rem; }
     .note { margin-top: .5rem; min-height: 1.25rem; font-size: .9375rem; }
@@ -1015,7 +1151,7 @@
       padding: .4375rem .5rem;
     }
 
-    .setup .row:last-child { grid-column: auto; }
+    .setup .row.ops-row { grid-column: auto; }
     .setup .lab { display: none; }
     .seg { padding: .1875rem; }
     .seg button { font-size: .8125rem; padding: .25rem .3125rem; white-space: nowrap; }
